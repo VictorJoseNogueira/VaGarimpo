@@ -1,0 +1,62 @@
+# ==========================================
+# .gitignore otimizado para Python + Playwright + Groq + Docker
+# ==========================================
+
+# --- Segurança e Credenciais (Crítico) ---
+.env
+.env.*
+secrets.json
+*.pem
+
+# --- Python & Ambientes Virtuais ---
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.pytest_cache/
+venv/
+.venv/
+env/
+ENV/
+
+# --- Ferramentas e IDEs ---
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+# Ignorar mapeamentos de volumes locais para evitar commit de dados do banco/arquivos
+.docker-volumes/
+docker-data/
+
+# --- Playwright & Web Scraping ---
+# Relatórios de testes, traces e estado de autenticação
+playwright-report/
+test-results/
+blob-report/
+.auth/
+*.trace.zip
+playwright/.cache/
+
+# --- LLM Agent (Groq / LangChain) & Persistência ---
+# Logs de execução, traces e bancos vetoriais/relacionais locais
+*.log
+.langchain/
+vector_db/
+*.db
+sqlite3.db
+
+# --- Outputs de Dados (Scraping & Agente) ---
+# Evita subir os arquivos gerados pelo seu scraper ou relatórios do LLM
+outputs/
+downloads/
+data/
+*.csv
+# Se tiver json de configuração, use !config.json abaixo para garantir que ele suba, mas ignore dados gerados
+# *.json

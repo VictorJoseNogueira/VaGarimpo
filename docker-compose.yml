@@ -1,0 +1,11 @@
+services:
+  scrapper:
+    build: .
+    image: freelas-scrapper
+    volumes:
+      - ./app/data:/app/data
+      - ./app:/app/app
+      - ./main.py:/app/main.py
+    env_file:
+      - .env
+    command: python main.py --mode all
