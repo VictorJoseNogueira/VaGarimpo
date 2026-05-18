@@ -1,9 +1,16 @@
-import os
-from groq import Groq
-from dotenv import load_dotenv
 import json
+import os
+
+from dotenv import load_dotenv
+from groq import Groq
+
 from app.logger import logger
 
+# ruff: noqa: E501
+
+AGENT_TEMPERATURE = 0.5
+AGENT_MAX_TOKENS = 2048
+JSON_DUMP_INDENT = 4
 
 load_dotenv()
 
@@ -19,11 +26,17 @@ def run_agent(user_input: dict | str) -> str:
         raise RuntimeError("API_KEY não está definida")
 
     if isinstance(user_input, dict):
-        user_input_str = json.dumps(user_input, ensure_ascii=False, indent=4)
+        user_input_str = json.dumps(
+            user_input,
+            ensure_ascii=False,
+            indent=JSON_DUMP_INDENT,
+        )
     else:
         user_input_str = str(user_input)
-    custom_agent = """
-        Você é um ATS rigoroso e Avaliador Técnico Sênior de freelancers. 
+
+    logger.info("chamando agente Iniciada")
+    custom_agent = """ # noqa: E501
+        Você é um ATS rigoroso e Avaliador Técnico Sênior de freelancers.
         Sua tarefa é analisar a vaga fornecida e compará-la com o perfil do candidato abaixo.
 
         # PERFIL DO CANDIDATO
@@ -44,7 +57,7 @@ def run_agent(user_input: dict | str) -> str:
 
         # REGRA DE SAÍDA ESTrita (FORMATO JSON)
         Você deve retornar APENAS um objeto JSON válido, sem nenhum texto fora das chaves, sem blocos de código markdown (```json).
-        Sua resposta deve conter UNICAMENTE o objeto JSON correspondente à condição aplicável. 
+        Sua resposta deve conter UNICAMENTE o objeto JSON correspondente à condição aplicável.
         Qualquer caractere, palavra, explicação ou marcação markdown (como ```json) fora das chaves {} quebrará o sistema. Seja estrito....
         Aplique a seguinte condicional para definir a estrutura do JSON:
 
@@ -65,7 +78,7 @@ def run_agent(user_input: dict | str) -> str:
         "weaknesses": ["<ponto fraco 1>", "<ponto fraco 2>"],
         "payments": "<Investimento 3, Estimado Reais calculado em formatado no passo>",
         "proposta": "Olá, [Nome do Recrutador extraído da vaga ou 'Equipe'],\n\nVi sua busca por um desenvolvedor para [Nome/Objetivo do Projeto] e meu perfil se alinha exatamente ao que você precisa. Entendi que seu principal desafio atual é [Dor central do cliente baseada na descrição].\n\nComo posso ajudar:\n- Desenvolvimento & Automação: Construo sistemas de ponta a ponta e automatizo processos (com histórico de redução de até 80% de tempo operacional).\n- Stack Alinhado: Domínio em [2 a 3 tecnologias da vaga que o candidato possui].\n\nPortfólio:\n- GitHub: [https://github.com/VictorJoseNogueira](https://github.com/VictorJoseNogueira)\n- LinkedIn: [https://www.linkedin.com/in/victor-nogueira-193a67256](https://www.linkedin.com/in/victor-nogueira-193a67256)\n\nEstimativa Comercial Inicial:\n- Prazo Estimado: [Sua estimativa realista de tempo baseada na complexidade, ex: 4 semanas] | Investimento: [Valor calculado no passo 3]. *(Não inclui custos de infraestrutura/hospedagem)*.\n\n[Elabore 1 pergunta técnica curta e altamente específica sobre a arquitetura ou regra de negócio do projeto para induzir resposta]. Podemos alinhar os detalhes em uma breve conversa de 5 minutos esta semana?\n\nNo aguardo,\nVictor José Nogueira Santos | victorvalim1@gmail.com"
-        }        
+        }
 
         """
     client = Groq(
@@ -79,18 +92,13 @@ def run_agent(user_input: dict | str) -> str:
                     "role": "system",
                     "content": custom_agent,
                 },
-                {
-                    "role":"user",
-                    "content": user_input_str
-                }
+                {"role": "user", "content": user_input_str},
             ],
-            temperature=0.5,
-            max_tokens=2048,
-            model=model_llama_3_3_70b_versatile,
+            temperature=AGENT_TEMPERATURE,
+            max_tokens=AGENT_MAX_TOKENS,
+            model=model_llama_3_1_8b_instant,
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
         logger.error("Erro na chamada ao Groq: %s", e)
         raise
-
-

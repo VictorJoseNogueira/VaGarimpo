@@ -2,8 +2,10 @@ import logging
 import os
 import sys
 
-LOG_PATH = os.getenv("LOG_PATH", os.path.join(os.path.dirname(__file__), "..", "scraper.log"))
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_PATH = os.getenv(
+    "LOG_PATH", os.path.join(os.path.dirname(__file__), "..", "scraper.log")
+)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
 
 logger = logging.getLogger("scrapper")
 

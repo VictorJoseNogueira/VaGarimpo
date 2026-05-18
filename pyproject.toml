@@ -1,0 +1,29 @@
+[project]
+name = "VaGarimpo"
+version = "0.1.0"
+description = """ web scrapper para raspar vagas freelancer no 99 freela,
+    comparar com o curriculo do candidato
+    e gerar um rascunho de proposta para enviar ao cliente,
+    caso a compatibilidade for maior que 80%"""
+authors = [
+    {name = "Victor Nogueira", email="victorvalim1@gmail.com"}
+]
+
+[tool.ruff]
+line-length = 85
+extend-exclude = []
+
+[tool.ruff.lint]
+preview = true
+select = ["I", "E", "F", "W", "PL", "PT"]
+
+[tool.ruff.format]
+preview = true
+quote-style = "double"
+
+[tool.taskipy.tasks]
+lint = "ruff check ."
+lint_fix = "ruff check --fix"
+format = "ruff format ."
+check = "task format && task lint_fix"
+run = "docker compose up"
