@@ -8,7 +8,7 @@ from app.logger import logger
 from app.services.agente import run_agent
 from app.services.get_json import extract_valid_json
 
-MAX_ITEMS_PER_RUN = 20
+MAX_ITEMS_PER_RUN = 5
 MAX_REQUESTS_BEFORE_RATE_LIMIT = 28
 RATE_LIMIT_WINDOW_SECONDS = 62
 JSON_DUMP_INDENT = 4

@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 from app.logger import logger
 
 DEFAULT_MAX_PAGES = 1
-DEFAULT_INITIAL_MAX_PAGES = 5
+DEFAULT_INITIAL_MAX_PAGES = 1
 DEFAULT_PAGE_NUMBER = 1
 MILLISECONDS_IN_SECOND = 1000
 PLAYWRIGHT_WAIT_MIN_SECONDS = 2.5
@@ -23,13 +23,13 @@ PLAYWRIGHT_LAUNCH_ARGS = [
 JSON_DUMP_INDENT = 4
 
 
-class scrapper_99_freela:
+class scrapper99Freela:
     def __init__(
         self, link: str, json_path: str, max_pages: int = DEFAULT_MAX_PAGES
     ):
         self.link = link.rstrip("/")
-        self.projects_links_dict = {}
         self.destiny_json = json_path
+        self.projects_links_dict = self._load_existing_data()
         self.page_number = 1
         self.max_pages = max_pages
         self.banned_words = [
@@ -79,6 +79,43 @@ class scrapper_99_freela:
             "phoenix",
         ]
 
+    def _load_existing_data(self) -> dict:
+        if not os.path.exists(self.destiny_json):
+            return {}
+
+        try:
+            with open(self.destiny_json, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                logger.info(
+                    "Carregados %s registros existentes de %s",
+                    len(data),
+                    self.destiny_json,
+                )
+                return data
+            logger.warning(
+                "Formato inesperado em %s: esperado dicionário, obtido %s",
+                self.destiny_json,
+                type(data).__name__,
+            )
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "Falha ao decodificar %s: %s",
+                self.destiny_json,
+                e,
+            )
+        except Exception as e:
+            logger.warning(
+                "Erro ao carregar %s: %s",
+                self.destiny_json,
+                e,
+            )
+        return {}
+
+    @staticmethod
+    def _project_needs_scraping(info: dict) -> bool:
+        return not info.get("descricao")
+
     def have_a_banned_word(self, word: str):
         have_banned_word = any(
             banned_word in word for banned_word in self.banned_words
@@ -120,7 +157,8 @@ class scrapper_99_freela:
                 projects_links = links_locator.all()
 
                 for locator in projects_links:
-                    titles = locator.inner_text()
+                    titles = locator.inner_text().lower()
+
                     relative_url = locator.get_attribute("href")
 
                     if not relative_url:
@@ -163,13 +201,6 @@ class scrapper_99_freela:
 
     def _extract_description(self, page, info: dict, title: str) -> None:
         """Extrai descrição do projeto da página."""
-        if info.get("descricao"):
-            logger.debug(
-                "Descrição já existente para %s, pulando coleta.",
-                title,
-            )
-            return
-
         try:
             logger.debug(
                 "Coletando descrição para: %s",
@@ -179,7 +210,7 @@ class scrapper_99_freela:
             description_locator.wait_for(
                 state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
             )
-            description_text = description_locator.inner_text()
+            description_text = description_locator.inner_text().lower()
             ban_description = self.have_a_banned_word(word=description_text)
             if ban_description:
                 info["descricao"] = "Descrição bloqueada por conteúdo banido"
@@ -192,20 +223,13 @@ class scrapper_99_freela:
     @staticmethod
     def _extract_skills(page, info: dict, title: str) -> None:
         """Extrai habilidades desejadas do projeto da página."""
-        if info.get("habilidades"):
-            logger.debug(
-                "Habilidades já existentes para %s, pulando coleta.",
-                title,
-            )
-            return
-
         try:
             logger.debug("Coletando habilidades para: %s", title)
             skills_locator = page.locator("div.container-habilidades a.habilidade")
             skills_locator.first.wait_for(
                 state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
             )
-            habilidades = skills_locator.all_inner_texts()
+            habilidades = skills_locator.all_inner_texts().lower()
             info["habilidades"] = [h.strip() for h in habilidades if h.strip()]
         except Exception as e:
             logger.debug(
@@ -218,13 +242,6 @@ class scrapper_99_freela:
     @staticmethod
     def _extract_details(page, info: dict, title: str) -> None:
         """Extrai tabela de detalhes do projeto da página."""
-        if info.get("detalhes"):
-            logger.debug(
-                "Detalhes já existentes para %s, pulando coleta.",
-                title,
-            )
-            return
-
         try:
             logger.debug("Coletando detalhes para: %s", title)
             table_locator = page.locator("div.info-adicionais table")
@@ -234,8 +251,8 @@ class scrapper_99_freela:
             rows = table_locator.locator("tr").all()
             info_adicionais = {}
             for row in rows:
-                chave = row.locator("th").inner_text().strip(" :")
-                valor = row.locator("td").inner_text().strip()
+                chave = row.locator("th").inner_text().strip(" :").lower()
+                valor = row.locator("td").inner_text().strip().lower()
                 info_adicionais[chave] = valor
             info["detalhes"] = info_adicionais
         except Exception as e:
@@ -249,20 +266,13 @@ class scrapper_99_freela:
     @staticmethod
     def _extract_user_info(page, info: dict, title: str) -> None:
         """Extrai informações do usuário/cliente do projeto da página."""
-        if info.get("nome_usuario"):
-            logger.debug(
-                "Nome de usuário já existente para %s, pulando coleta.",
-                title,
-            )
-            return
-
         try:
             logger.debug("Coletando nome para: %s", title)
             user_locator = page.locator("div.info-usuario-nome span.name")
             user_locator.wait_for(
                 state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
             )
-            nome_usuario = user_locator.inner_text().strip()
+            nome_usuario = user_locator.inner_text().lower().strip()
             info["nome_usuario"] = nome_usuario
         except Exception as e:
             logger.debug("Sem nome de usuário para %s ou erro: %s", title, e)
@@ -275,9 +285,9 @@ class scrapper_99_freela:
         logger.debug("Coleta de links Iniciada %s", title)
 
         self._extract_description(page, info, title)
-        scrapper_99_freela._extract_skills(page, info, title)
-        scrapper_99_freela._extract_details(page, info, title)
-        scrapper_99_freela._extract_user_info(page, info, title)
+        scrapper99Freela._extract_skills(page, info, title)
+        scrapper99Freela._extract_details(page, info, title)
+        scrapper99Freela._extract_user_info(page, info, title)
 
         page.wait_for_timeout(
             random.uniform(
@@ -289,19 +299,30 @@ class scrapper_99_freela:
 
     def scrap_page_get_data(self):
         """Orquestra a coleta de dados para todos os projetos."""
+        projects_to_scrape = [
+            (link, info)
+            for link, info in self.projects_links_dict.items()
+            if self._project_needs_scraping(info)
+        ]
+
+        if not projects_to_scrape:
+            logger.info(
+                "Nenhum projeto novo para processar. Pulando coleta de dados."
+            )
+            return self
+
         with sync_playwright() as p:
             start_time = time.time()
             logger.info(
                 "Iniciando coleta de dados para %s projetos",
-                len(self.projects_links_dict),
+                len(projects_to_scrape),
             )
             browser = p.chromium.launch(
                 headless=True,
                 args=PLAYWRIGHT_LAUNCH_ARGS,
             )
             page = browser.new_page()
-
-            for link, info in self.projects_links_dict.items():
+            for link, info in projects_to_scrape:
                 self._process_project_data(page, link, info)
 
             browser.close()
@@ -349,10 +370,18 @@ class scrapper_99_freela:
         return self
 
 
-freela = "https://www.99freelas.com.br/projects?categoria=web-mobile-e-software&sub-categorias=banco-de-dados+desenvolvimento-desktop+desenvolvimento-web&niveis-experiencia=intermediario%2Ciniciante"
+def main():
+    freela = (
+        "https://www.99freelas.com.br/projects?"
+        "categoria=web-mobile-e-software&"
+        "sub-categorias=banco-de-dados+desenvolvimento-desktop+desenvolvimento-web&"
+        "niveis-experiencia=intermediario%2Ciniciante"
+    )
 
-scrapper_99_freela(
-    link=freela,
-    json_path="app/data/projects.json",
-    max_pages=DEFAULT_INITIAL_MAX_PAGES,
-).scrap_page_get_links().scrap_page_get_data().save_json()
+    scrapper99Freela(
+        link=freela, json_path="app/data/projects.json", max_pages=2
+    ).scrap_page_get_links().scrap_page_get_data().save_json()
+
+
+if __name__ == "__main__":
+    main()
