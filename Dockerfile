@@ -1,5 +1,5 @@
 # Usando a imagem oficial do Playwright com Python 3.11 pré-instalado
-FROM mcr.microsoft.com/playwright/python:v1.43.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
@@ -17,8 +17,9 @@ RUN playwright install chromium
 # Copia o restante do código do projeto para o container
 COPY . .
 
-# Cria o diretório de dados caso não exista
-RUN mkdir -p app/data
+# Cria o diretório que será usado para armazenar `projects.json` dentro do container
+# (o código agora vive em `src/` no workspace montado em `/app`).
+RUN mkdir -p /app/src/data
 
 # Define o comando de execução padrão (pode ser sobrescrito ao rodar)
 CMD ["python", "main.py", "--mode", "all"]

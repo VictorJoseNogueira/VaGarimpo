@@ -4,15 +4,15 @@ import os
 from datetime import datetime
 from time import sleep
 
-from app.logger import logger
-from app.services.agente import run_agent
-from app.services.get_json import extract_valid_json
+from src.core.logger import logger
+from src.scrapper.get_json import extract_valid_json
+from src.services.agente import run_agent
 
 MAX_ITEMS_PER_RUN = 5
 MAX_REQUESTS_BEFORE_RATE_LIMIT = 28
 RATE_LIMIT_WINDOW_SECONDS = 62
 JSON_DUMP_INDENT = 4
-origin_json = os.getenv("JSON_PATH", "app/data/projects.json")
+origin_json = os.getenv("JSON_PATH", "src/data/projects.json")
 
 # Carregar dados do arquivo de origem
 logger.info("Iniciando processamento de vagas a partir de %s", origin_json)

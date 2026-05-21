@@ -4,11 +4,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from app.logger import logger
+from src.core.logger import logger
 
 ROOT_DIR = Path(__file__).resolve().parent
-SCRAPER_MODULE = "app.services.scrapper"
-GET_JOB_MODULE = "app.services.get_job"
+SCRAPER_MODULE = "src.scrapper.scrapper"
+GET_JOB_MODULE = "src.services.get_job"
 
 
 def run_module(module_name: str) -> int:

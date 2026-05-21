@@ -1,7 +1,7 @@
 import json
 import re  # <--- Importe o módulo de Regex
 
-from app.logger import logger
+from src.core.logger import logger
 
 JSON_PREVIEW_LENGTH = 200
 

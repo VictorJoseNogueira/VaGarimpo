@@ -21,7 +21,7 @@
 
 O projeto é uma aplicação Python orientada a scripts que coleta dados do 99freelas.com.br, salva esses dados em JSON e processa cada vaga com um agente de linguagem (LLM) usando o cliente `groq`.
 
-A execução é feita por scripts CLI; não há servidor HTTP nem endpoints REST. A arquitetura é monolítica modular, com responsabilidades separadas em módulos `app/services`.
+A execução é feita por scripts CLI; não há servidor HTTP nem endpoints REST. A arquitetura é monolítica modular, com responsabilidades separadas em módulos `src/services`.
 
 ## Árvore de diretórios (visão atual)
 
@@ -37,8 +37,9 @@ scrapper/                      # raiz do repositório
 ├── main.py
 ├── requirements.txt
 ├── spec_driven_development.md
-├── app/
-│   ├── logger.py
+├── src/
+│   ├── core/
+│   │   └── logger.py
 │   ├── data/
 │   │   └── projects.json
 │   └── services/
@@ -52,11 +53,11 @@ scrapper/                      # raiz do repositório
 
 ## Responsabilidade de cada pasta
 
-- `app/`
+- `src/`
   - Agrupa a lógica principal da aplicação.
-- `app/services/`
+- `src/services/`
   - Contém os módulos de scraping, processamento de vagas, agente LLM e extrator de JSON.
-- `app/data/`
+- `src/data/`
   - Armazena o arquivo `projects.json` usado como entrada e saída do pipeline.
 - `venv/`
   - Ambiente virtual local; não deve ser versionado.
@@ -65,36 +66,36 @@ scrapper/                      # raiz do repositório
 
 - `main.py`
   - Ponto de entrada CLI do projeto. Executa os modos `scraper`, `get-job` ou `all`.
-  - Configura `PYTHONPATH` para garantir que `app` seja importável.
+  - Configura `PYTHONPATH` para garantir que `src` seja importável.
 
 - `Dockerfile`
   - Define a imagem Docker para executar o pipeline.
   - Usa a imagem oficial Playwright para Python e instala dependências via `requirements.txt`.
   - Executa `python main.py --mode all` por padrão.
 
-- `docker-compose.yml`
-  - Define o serviço `scrapper` com volume mounts para `app/data`, `app` e `main.py`.
+`docker-compose.yml`
+  - Define o serviço `scrapper` com volume mounts para o workspace e `main.py`.
   - Carrega variáveis de ambiente de `.env`.
 
-- `app/logger.py`
+`src/core/logger.py`
   - Configura o logging compartilhado para a aplicação.
 
-- `app/services/scrapper.py`
+`src/scrapper/scrapper.py`
   - Realiza scraping de projetos do 99freelas.
-  - Extrai atributos de cada projeto e grava o JSON em `app/data/projects.json`.
+  - Extrai atributos de cada projeto e grava o JSON em `src/data/projects.json`.
 
-- `app/services/get_job.py`
+`src/services/get_job.py`
   - Processa cada item em `projects.json` que ainda não possui `llm_response`.
-  - Envia dados ao agente em `app/services/agente.py` e persiste a resposta.
+  - Envia dados ao agente em `src/services/agente.py` e persiste a resposta.
 
-- `app/services/agente.py`
+`src/services/agente.py`
   - Faz a chamada ao cliente `groq.Groq`.
   - Monta prompt e retorna a resposta de texto.
 
-- `app/services/get_json.py`
+`src/services/get_json.py`
   - Extrai o JSON válido do texto retornado pelo agente.
 
-- `app/services/tester.py`
+`src/services/tester.py`
   - Arquivo presente para testes/experimentos, sem fluxo principal ativo.
 
 - `requirements.txt`
@@ -102,9 +103,9 @@ scrapper/                      # raiz do repositório
 
 ## Fluxo principal da aplicação
 
-1. Executar o scraper para coletar projetos e gerar/atualizar `app/data/projects.json`.
+1. Executar o scraper para coletar projetos e gerar/atualizar `src/data/projects.json`.
 2. Executar o processamento de vagas para enviar cada projeto ao agente LLM.
-3. O resultado é salvo em `app/data/projects.json`, com o campo `llm_response` preenchido para cada item processado.
+3. O resultado é salvo em `src/data/projects.json`, com o campo `llm_response` preenchido para cada item processado.
 
 ## Ponto de entrada do sistema
 
@@ -113,7 +114,7 @@ scrapper/                      # raiz do repositório
   - `scraper`
   - `get-job`
   - `all`
-- O `main.py` chama `app.services.scrapper` e `app.services.get_job` via `python -m`.
+O `main.py` chama `src.scrapper.scrapper` e `src.services.get_job` via `python -m`.
 
 ## Dependências importantes e integrações externas
 
@@ -136,10 +137,8 @@ Integrações externas:
 
 ### Observações sobre Docker
 
-- `docker-compose.yml` monta:
-  - `./app/data:/app/data`
-  - `./app:/app/app`
-  - `./main.py:/app/main.py`
+- `docker-compose.yml` monta o workspace inteiro em `/app` e expõe `main.py` no container.
+- O Dockerfile cria `/app/src/data` para persistência do `projects.json` quando necessário.
 - A execução padrão no container é `python main.py --mode all`.
 
 ## Observações arquiteturais
@@ -156,7 +155,7 @@ Integrações externas:
 3. Adicionar testes automatizados para os serviços de scraping, agente e parser.
 4. Ajustar Playwright para rodar em modo headless em ambientes CI/containers.
 5. Documentar claramente as variáveis de ambiente necessárias e proteger `.env`.
-2. Converter `app/data` para um armazenamento com transações (SQLite, ou um bucket remoto) para maior confiabilidade.
+2. Converter `src/data` para um armazenamento com transações (SQLite, ou um bucket remoto) para maior confiabilidade.
 3. Extrair a lógica de orquestração em `get_job.py` para um módulo testável e criar pequenos testes automatizados.
 4. Opcional: criar uma camada de API (FastAPI) para permitir execução controlada via HTTP e exposição de status (health, metrics).
 5. Adicionar um `Makefile` ou scripts `docker-compose` para facilitar builds e execuções locais/CI.

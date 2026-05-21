@@ -5,7 +5,7 @@ import sys
 LOG_PATH = os.getenv(
     "LOG_PATH", os.path.join(os.path.dirname(__file__), "..", "scraper.log")
 )
-LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 logger = logging.getLogger("scrapper")
 
