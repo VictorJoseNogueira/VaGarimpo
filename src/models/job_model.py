@@ -13,6 +13,7 @@ from mongoengine import (
 from mongoengine import DynamicEmbeddedDocument, StringField, FloatField, ListField
 
 class LlmResponse(DynamicEmbeddedDocument):
+    first_match=StringField()
     status = StringField()
     match_percentage = FloatField()
     strengths = ListField(StringField())

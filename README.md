@@ -122,3 +122,33 @@ Arquivo criado
 Criei este arquivo de documentação e auditoria: [README.md](README.md)
 
 Se desejar, atualizo o `requirements.txt` automaticamente com as mudanças recomendadas.
+
+| Sigla | Significado em Inglês | Significado em Português |
+| --- | --- | --- |
+| RPM | Requests per minute | Solicitações por minuto |
+| RPD | Requests per day | Solicitações por dia |
+| TPM | Tokens per minute | Tokens por minuto |
+| TPD | Tokens per day | Tokens por dia |
+| ASH | Audio seconds per hour | Segundos de áudio por hora |
+| ASD | Audio seconds per day | Segundos de áudio por dia |
+| ITPM | Input tokens per minute | Tokens de entrada por minuto |
+| OTPM | Output tokens per minute | Tokens de saída por minuto |
+
+| Model | RPM | RPD | TPM | TPD | ASH | ASD |
+| --- | --- | --- | --- | --- | --- | --- |
+| allam-2-7b | 30 | 7K | 6K | 500K | - | - |
+| canopylabs/orpheus-arabic-saudi | 10 | 100 | 1.2K | 3.6K | - | - |
+| canopylabs/orpheus-v1-english | 10 | 100 | 1.2K | 3.6K | - | - |
+| groq/compound | 30 | 250 | 70K | - | - | - |
+| groq/compound-mini | 30 | 250 | 70K | - | - | - |
+| llama-3.1-8b-instant | 30 | 14.4K | 6K | 500K | - | - |
+| llama-3.3-70b-versatile | 30 | 1K | 12K | 100K | - | - |
+| meta-llama/llama-4-scout-17b-16e-instruct | 30 | 1K | 30K | 500K | - | - |
+| meta-llama/llama-prompt-guard-2-22m | 30 | 14.4K | 15K | 500K | - | - |
+| meta-llama/llama-prompt-guard-2-86m | 30 | 14.4K | 15K | 500K | - | - |
+| openai/gpt-oss-120b | 30 | 1K | 8K | 200K | - | - |
+| openai/gpt-oss-20b | 30 | 1K | 8K | 200K | - | - |
+| openai/gpt-oss-safeguard-20b | 30 | 1K | 8K | 200K | - | - |
+| qwen/qwen3-32b | 60 | 1K | 6K | 500K | - | - |
+| whisper-large-v3 | 20 | 2K | - | - | 7.2K | 28.8K |
+| whisper-large-v3-turbo | 20 | 2K | - | - | 7.2K | 28.8K |

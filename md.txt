@@ -1,5 +1,0 @@
-Dados coletados para landing page para venda de ebooks de confeitaria:
-descrição='preciso criar uma landing page para venda de ebooks no ramo da confeitaria. a página deve estar integrada ao kiwify para venda direta e incluir um fluxo de upsell.',
-skills='Elemento não disponível',
-username='Elemento não disponível',
-details='None'
