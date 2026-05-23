@@ -6,6 +6,7 @@ from mongoengine import (
     ListField,
     StringField,
     URLField,
+    DynamicEmbeddedDocument
 )
 
 
@@ -16,7 +17,7 @@ class LlmResponse(EmbeddedDocument):
 
 
 # Modelos auxiliares para os objetos aninhados
-class JobDetails(EmbeddedDocument):
+class JobDetails(DynamicEmbeddedDocument):
     category = StringField()
     subcategory = StringField()
     budget = StringField()
@@ -24,6 +25,7 @@ class JobDetails(EmbeddedDocument):
     visibility = StringField()
     proposals = StringField()
     interested = StringField()
+    exclude_proposals = StringField()
     time_remaining = StringField()
     minimum_value = StringField()
 

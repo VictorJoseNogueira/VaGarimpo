@@ -1,21 +1,20 @@
-import json
 import os
 import random
 import re
 import time
 
 from playwright.sync_api import sync_playwright
-from typing import Callable, Any
+
 from src.core.database import db_connect, db_disconnect
 from src.core.logger import logger
-from src.services.db_service import post_a_job, read_all_jobs, read_specific_job, update_a_job
+from src.services.db_service import post_a_job, read_specific_job, update_a_job
 
 DEFAULT_MAX_PAGES = 1
 DEFAULT_INITIAL_MAX_PAGES = 1
 DEFAULT_PAGE_NUMBER = 1
 MILLISECONDS_IN_SECOND = 1000
-PLAYWRIGHT_WAIT_MIN_SECONDS = 2.5
-PLAYWRIGHT_WAIT_MAX_SECONDS = 5
+PLAYWRIGHT_WAIT_MIN_SECONDS = 1
+PLAYWRIGHT_WAIT_MAX_SECONDS = 3
 PLAYWRIGHT_WAIT_TIMEOUT_MS = 5000
 PLAYWRIGHT_LAUNCH_ARGS = [
     "--no-sandbox",
@@ -26,6 +25,18 @@ JSON_DUMP_INDENT = 4
 DESCRIPTION_ELEMENT = "div[class*='project-description']"
 SKILLS_ELEMENT = "div.container-habilidades a.habilidade"
 USER_INFO_ELEMENT = "div.info-usuario-nome span.name"
+MAPING_KEYS = {
+    'categoria': 'category',
+    'subcategoria': 'subcategory',
+    'orçamento': 'budget',
+    'nível de experiência': 'experience_level',
+    'visibilidade': 'visibility',
+    'propostas': 'proposals',
+    'interessados': 'interested',
+    "propostas excluídas":"exclude_proposals",
+    'tempo restante': 'time_remaining',
+    'valor mínimo': 'minimum_value'
+}
 
 
 class scrapper99Freela:
@@ -85,10 +96,6 @@ class scrapper99Freela:
         ]
         db_connect()
 
-    @staticmethod
-    def _project_needs_scraping(info: dict) -> bool:
-        pass
-
     def _have_a_banned_word(self, word: str):
         have_banned_word = any(
             banned_word in word for banned_word in self.banned_words
@@ -135,12 +142,19 @@ class scrapper99Freela:
             return
 
         complete_url = self._normalize_project_url(relative_url)
+        if read_specific_job(complete_url):
+            logger.debug("Projeto já existe no banco e será ignorado: %s", complete_url)
+            return
+
         clean_title = re.sub(r"\s+", " ", titles).strip()
         ban_title = self._have_a_banned_word(word=clean_title)
 
         if clean_title and not ban_title:
+            self.projects_links_dict[complete_url] = {
+                "title": clean_title,
+                "link": complete_url,
+            }
             try:
-                post_a_job({"title": clean_title, "link": complete_url})
                 logger.debug("Coletado: %s", clean_title)
             except Exception as e:
                 logger.error("Erro ao coletar projeto: %s", e)
@@ -149,7 +163,6 @@ class scrapper99Freela:
         projects_links = self._get_links_and_titles(page)
         for locator in projects_links:
             self._process_project_link(locator)
-
 
     def scrap_page_get_links(self):
         with sync_playwright() as p:
@@ -160,17 +173,17 @@ class scrapper99Freela:
             )
             page_number = DEFAULT_PAGE_NUMBER
             browser = p.chromium.launch(
-                headless=True,
+                headless=False, slow_mo=100,
                 args=PLAYWRIGHT_LAUNCH_ARGS,
             )
+            page = browser.new_page()
             while page_number <= self.max_pages:
-                page = browser.new_page()
                 target_url = self._generate_target_url(page_number)
                 page.goto(target_url)
 
                 # Aguarda e captura os links dos projetos
                 self._collect_project_links(page)
-                
+
                 page_number += 1
                 page.wait_for_timeout(random_time * MILLISECONDS_IN_SECOND)
             browser.close()
@@ -196,35 +209,18 @@ class scrapper99Freela:
             description_text = description_locator.inner_text().lower()
             ban_description = self._have_a_banned_word(word=description_text)
             if ban_description:
+                logger.warning(
+                    "Descrição de %s bloqueada por conteúdo banido",
+                    title,
+                )
                 info["descricao"] = "Descrição bloqueada por conteúdo banido"
             else:
                 info["descricao"] = description_text.strip()
         except Exception as e:
             logger.warning("Erro ao coletar descrição para %s: %s", title, e)
             info["descricao"] = "Descrição não disponível"
-
-   
-    @staticmethod
-    def _extract_skills(page, info: dict, title: str) -> None:
-        """Extrai habilidades desejadas do projeto da página."""
-        try:
-            logger.debug("Coletando habilidades para: %s", title)
-            skills_locator = page.locator("div.container-habilidades a.habilidade")
-            skills_locator.first.wait_for(
-                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
-            )
-            habilidades = skills_locator.all_inner_texts().lower()
-            info[""] = [h.strip() for h in habilidades if h.strip()]
-        except Exception as e:
-            logger.debug(
-                "Sem Habilidades Desejadas para %s ou erro: %s",
-                title,
-                e,
-            )
-            info["habilidades"] = []
-
-    @staticmethod
-    def _extract_details(page, info: dict, title: str) -> None:
+    
+    def _extract_details(self, page, doc: dict, title: str) -> dict:
         """Extrai tabela de detalhes do projeto da página."""
         try:
             logger.debug("Coletando detalhes para: %s", title)
@@ -238,154 +234,128 @@ class scrapper99Freela:
                 chave = row.locator("th").inner_text().strip(" :").lower()
                 valor = row.locator("td").inner_text().strip().lower()
                 info_adicionais[chave] = valor
-                logger.info(f"chave: {chave} - valor: {valor}")
-            info["details"] = info_adicionais
+                logger.debug(f"chave: {chave} - valor: {valor}")
+            doc["details"] = info_adicionais
+            clean_data = self._format_brute_data(doc=info_adicionais)
+            return clean_data
         except Exception as e:
-            logger.info(
-                "Sem Informações adicionais para %s ou erro: %s",
+            logger.warning(
+                "Sem informações adicionais ou erro para %s: %s",
                 title,
                 e,
             )
-            info["details"] = {}
-
-    @staticmethod
-    def _extract_user_info(page, info: dict, title: str) -> None:
-        """Extrai informações do usuário/cliente do projeto da página."""
-        try:
-            logger.debug("Coletando nome para: %s", title)
-            user_locator = page.locator("div.info-usuario-nome span.name")
-            user_locator.wait_for(
-                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
-            )
-            nome_usuario = user_locator.inner_text().lower().strip()
-            info["nome_usuario"] = nome_usuario
-        except Exception as e:
-            logger.debug("Sem nome de usuário para %s ou erro: %s", title, e)
-            info["nome_usuario"] = "Não informado"
-
-    def _process_project_data(self, page, link: str, info: dict) -> None:
-        """Processa os dados de um projeto específico."""
-        page.goto(link)
-        title = info.get("titulo", "Desconhecido")
-        logger.debug("Coleta de links Iniciada %s", title)
-
-        self._extract_description(page, info, title)
-        self._extract_skills(page, info, title)
-        self._extract_details(page, info, title)
-        self._extract_user_info(page, info, title)
-
-        page.wait_for_timeout(
-            random.uniform(
-                PLAYWRIGHT_WAIT_MIN_SECONDS,
-                PLAYWRIGHT_WAIT_MAX_SECONDS,
-            )
-            * MILLISECONDS_IN_SECOND
-        )
-    @staticmethod
-    def _extract_elements(page, element, field_check) -> str:
-        if not field_check:
-            logger.debug("Campo %s já preenchido, pulando extração", element)
-            try:
-                element_locator = page.locator(element)
-                element_locator.wait_for(
-                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
-                )
-                element_text = element_locator.inner_text().lower()
-                page.wait_for_timeout(
-                random.uniform(
-                    PLAYWRIGHT_WAIT_MIN_SECONDS,
-                    PLAYWRIGHT_WAIT_MAX_SECONDS,
-                )
-                * MILLISECONDS_IN_SECOND
-                )
-                logger.info(element_text)
-                
-                return element_text.strip()      
-            except Exception as e:
-                logger.warning("Erro ao coletar elemento %s: %s", element, e)
-                return "Elemento não disponível"
-        
+            doc["details"] = {}
+            return {}
     
-   
+    @staticmethod
+    def _format_brute_data(doc:dict)->dict:
+        correct_data = {}
+        for key, value in doc.items():
+            clean_key = key.strip().lower()
+            if clean_key in MAPING_KEYS:
+                new_key = MAPING_KEYS[clean_key]
+                correct_data[new_key] = value
+            else:
+                correct_data[clean_key] = value
+        return correct_data
+
+
+    @staticmethod
+    def _extract_elements(page, element) -> str:
+        try:
+            element_locator = page.locator(element)
+            element_locator.wait_for(
+                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
+            )
+            element_text = element_locator.inner_text().lower()
+            logger.debug(
+                "Elemento extraído %s com %s caracteres",
+                element,
+                len(element_text),
+            )
+
+            return element_text.strip()
+        except Exception as e:
+            logger.warning("Erro ao coletar elemento %s: %s", element, e)
+            return "Elemento não disponível"
+
+    @staticmethod
+    def _extract_list_elements(page, element) -> list[str]:
+        try:
+            element_locator = page.locator(element)
+            # Aguarda o primeiro elemento correspondente ficar visível
+            element_locator.first.wait_for(
+                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
+            )
+            
+            # all_inner_texts retorna uma lista com os textos de todos os elementos encontrados
+            elements_text = element_locator.all_inner_texts()            
+            # Remove espaços em branco e padroniza para minúsculas
+            return [text.strip().lower() for text in elements_text if text.strip()]
+        except Exception as e:
+            logger.warning("Erro ao coletar lista de elementos %s: %s", element, e)
+            return []  # Retorna lista vazia em caso de falha, evitando quebrar o ListField no MongoDB
+
     def scrap_page_get_data(self):
         """Orquestra a coleta de dados para todos os projetos."""
         with sync_playwright() as p:
-            documents = read_all_jobs()
             start_time = time.time()
-            browser = p.chromium.launch(
-                headless=True,
-                args=PLAYWRIGHT_LAUNCH_ARGS
-            )
+            browser = p.chromium.launch(headless=False, slow_mo=100, args=PLAYWRIGHT_LAUNCH_ARGS)
             page = browser.new_page()
-            for doc in documents:
-                page.goto(doc.link)
+            total_links = len(self.projects_links_dict)
+            count = 1
+            for doc in self.projects_links_dict.values():
+                logger.info(
+                    "Processando projeto %s/%s: %s",
+                    count,
+                    total_links,
+                    doc["title"],
+                )
+                page.goto(doc["link"])
                 try:
-                    print(f"Coletando dados para: {doc.title}")
-                    description = self._extract_elements(page, DESCRIPTION_ELEMENT, doc.description)
-                    skills = self._extract_elements(page, SKILLS_ELEMENT, doc.skills)
-                    username = self._extract_elements(page, USER_INFO_ELEMENT, doc.userName)
-                    details = self._extract_details(page, doc, doc.title)
-                    logger.warning(f"Dados coletados para {doc.title}: descrição='{description}', skills='{skills}', username='{username}', details='{details}'")
-                    update_a_job(
-                        url=doc.link,
-                        description=description,
-                        skills=skills,
-                        username=username,
-                        details=details
+                    logger.info("Coletando dados para %s", doc["title"])
+                    doc["description"] = self._extract_elements(
+                        page=page, element=DESCRIPTION_ELEMENT
+                    )
+                    doc["skills"] = self._extract_list_elements(
+                        page=page, element=SKILLS_ELEMENT
+                    )
+                    doc["userName"] = self._extract_elements(
+                        page=page, element=USER_INFO_ELEMENT
+                    )
+                    doc["details"] = self._extract_details(
+                        page=page, doc=doc, title=doc["title"]
                     )
                 except Exception as e:
-                    logger.error(f"Falha ao processar a página {doc.link}: {e}")
+                    logger.error(f"Falha ao processar a página {doc['link']}: {e}")
+                finally:
+                    count += 1
+                    page.wait_for_timeout(
+                        random.uniform(
+                            PLAYWRIGHT_WAIT_MIN_SECONDS,
+                            PLAYWRIGHT_WAIT_MAX_SECONDS,
+                        )
+                        * MILLISECONDS_IN_SECOND
+                    )
             browser.close()
             logger.info("Coleta finalizada em %.2fs", time.time() - start_time)
             return self
 
-    def save_json(self):
-        if (
-            os.path.exists(self.destiny_json)
-            and os.path.getsize(self.destiny_json) > 0
-        ):
-            with open(self.destiny_json, "r", encoding="utf-8") as f:
-                try:
-                    current_data = json.load(f)
-                except json.JSONDecodeError:
-                    current_data = {}
-
-        else:
-            current_data = {}
-
-        simulated_data = current_data.copy()
-        simulated_data.update(self.projects_links_dict)
-        if simulated_data == current_data:
-            logger.info("Nenhum Novo dado Detectado")
-            return self
-        # persistir novos itens
-        current_data.update(self.projects_links_dict)
-        try:
-            with open(self.destiny_json, "w", encoding="utf-8") as f:
-                json.dump(
-                    current_data,
-                    f,
-                    indent=JSON_DUMP_INDENT,
-                    ensure_ascii=False,
-                )
-            logger.info(
-                "Salvo %s registros em %s",
-                len(self.projects_links_dict),
-                self.destiny_json,
-            )
-        except Exception as e:
-            logger.error("Falha ao salvar %s: %s", self.destiny_json, e)
+    def save_mongodb(self) -> None:
+        for key, value in self.projects_links_dict.items():
+            logger.debug(f"Salvando no MongoDB - {key}: {value}")
+            post_a_job(self.projects_links_dict[key])
         return self
-
 
 def main():
     freela = r"https://www.99freelas.com.br/projects?categoria=web-mobile-e-software&sub-categorias=banco-de-dados+desenvolvimento-desktop+desenvolvimento-web&niveis-experiencia=iniciante%2Cintermediario&page=4"
 
     json_path = os.getenv("JSON_PATH", "src/data/projects.json")
     scrapper99Freela(
-        link=freela, json_path=json_path, max_pages=1
-    ).scrap_page_get_links().scrap_page_get_data().save_json()
+        link=freela, json_path=json_path, max_pages=10
+    ).scrap_page_get_links().scrap_page_get_data().save_mongodb()
     db_disconnect()
+
 
 if __name__ == "__main__":
     main()

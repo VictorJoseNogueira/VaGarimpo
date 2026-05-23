@@ -36,7 +36,8 @@ def run_agent(user_input: dict | str) -> str:
     else:
         user_input_str = str(user_input)
 
-    logger.info("chamando agente Iniciada")
+    logger.info("Iniciando chamada ao agente")
+    logger.debug("run_agent: tamanho do input=%s", len(user_input_str))
     custom_agent = agent_prompt
     client = Groq(
         api_key=API_KEY,

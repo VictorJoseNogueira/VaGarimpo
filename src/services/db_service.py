@@ -1,10 +1,9 @@
 from typing import Any
 
-from src.core.logger import logger
-
-from src.models.job_model import JobData
-
 from mongoengine.errors import NotUniqueError
+
+from src.core.logger import logger
+from src.models.job_model import JobData
 
 
 def post_a_job(data: dict[str, Any]) -> None:
@@ -22,28 +21,26 @@ def post_a_job(data: dict[str, Any]) -> None:
         )
 
     except Exception as e:
-        raise RuntimeError(f"Erro ao criar entrada no banco de dados: {e}")
+        raise RuntimeError("Erro ao criar entrada no banco de dados: %s", e)
 
 
 def read_specific_job(url: str) -> object:
     job = JobData.objects(link=url).first()
     if job:
         return job
-    
+
+
 def read_all_jobs() -> list[object]:
     return list(JobData.objects())
 
 
-def update_a_job(url: str, **kwargs) -> None:
+def update_a_job(url: str, data: dict) -> None:
     job = JobData.objects(link=url).first()
     if not job:
-        raise ValueError(f"Job com url '{url}' não encontrado.")    
-    if not kwargs:
+        raise ValueError(f"Job com url '{url}' não encontrado.")
+    if not data:
         return
-        
-    update_payload = {f"set__{key}": value for key, value in kwargs.items()}
-    
-    job.update(**update_payload)
+    job.update(data)
 
 
 def delete_a_job(url: str):

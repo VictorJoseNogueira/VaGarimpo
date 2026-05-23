@@ -59,7 +59,7 @@ with open(origin_json, encoding="utf-8") as file:
 
         my_input = f"Vaga: {key}\nDados: {value}"
 
-        logger.debug("--- inicio item ---")
+        logger.debug("Iniciando processamento do item %s", key)
         logger.info("Processando item %s/%s: %s", limit_pages + 1, total_rows, key)
 
         # Tentativa de chamada ao agente

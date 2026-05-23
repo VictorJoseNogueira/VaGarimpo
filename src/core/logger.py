@@ -12,7 +12,8 @@ logger = logging.getLogger("scrapper")
 if not logger.handlers:
     level = getattr(logging, LOG_LEVEL, logging.INFO)
     logger.setLevel(level)
-    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    fmt = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logger.propagate = False
 
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(level)
