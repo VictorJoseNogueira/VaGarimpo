@@ -28,6 +28,6 @@ format = "ruff format ."
 check = "task lint && task lint_fix && task format"
 scrapper = "python3 -m src.scrapper.scrapper"
 db = "python3 -m src.core.database"
-freeze = "pip freeze > requirements.txt"
-
+freeze = "pipreqs . --force"
+install = "pip install -r requirements.txt"
 run = "docker compose up --build"

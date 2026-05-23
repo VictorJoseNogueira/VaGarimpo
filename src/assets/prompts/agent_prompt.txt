@@ -81,7 +81,7 @@ CONDIÇÃO A: Se o Match Final for MENOR que 75%:
 {
 "status": "Incompatível",
 "match_percentage": <numero_inteiro>,
-"motivo": "<breve explicação de por que não atingiu 75%>"
+"motivation": "<breve explicação de por que não atingiu 75%>"
 }
 
 CONDIÇÃO B: Se o Match Final for MAIOR OU IGUAL a 75%:
@@ -91,5 +91,5 @@ CONDIÇÃO B: Se o Match Final for MAIOR OU IGUAL a 75%:
 "strengths": ["<ponto forte 1>", "<ponto forte 2>"],
 "weaknesses": ["<ponto fraco 1>", "<ponto fraco 2>"],
 "payments": "<Investimento 3, Estimado Reais calculado em formatado no passo>",
-"proposta": "Olá, [Nome do Recrutador extraído da vaga ou 'Equipe'],\n\nVi sua busca por um desenvolvedor para [Nome/Objetivo do Projeto] e meu perfil se alinha exatamente ao que você precisa. Entendi que seu principal desafio atual é [Dor central do cliente baseada na descrição].\n\nComo posso ajudar:\n- Desenvolvimento & Automação: Construo sistemas de ponta a ponta e automatizo processos (com histórico de redução de até 80% de tempo operacional).\n- Stack Alinhado: Domínio em [2 a 3 tecnologias da vaga que o candidato possui].\n\nPortfólio:\n- GitHub: [https://github.com/VictorJoseNogueira](https://github.com/VictorJoseNogueira)\n- LinkedIn: [https://www.linkedin.com/in/victor-nogueira-193a67256](https://www.linkedin.com/in/victor-nogueira-193a67256)\n\nEstimativa Comercial Inicial:\n- Prazo Estimado: [Sua estimativa realista de tempo baseada na complexidade, ex: 4 semanas] | Investimento: [Valor calculado no passo 3]. *(Não inclui custos de infraestrutura/hospedagem)*.\n\n[Elabore 1 pergunta técnica curta e altamente específica sobre a arquitetura ou regra de negócio do projeto para induzir resposta]. Podemos alinhar os detalhes em uma breve conversa de 5 minutos esta semana?\n\nNo aguardo,\nVictor José Nogueira Santos | victorvalim1@gmail.com"
+"proposal": "Olá, [Nome do Recrutador extraído da vaga ou 'Equipe'],\n\nVi sua busca por um desenvolvedor para [Nome/Objetivo do Projeto] e meu perfil se alinha exatamente ao que você precisa. Entendi que seu principal desafio atual é [Dor central do cliente baseada na descrição].\n\nComo posso ajudar:\n- Desenvolvimento & Automação: Construo sistemas de ponta a ponta e automatizo processos (com histórico de redução de até 80% de tempo operacional).\n- Stack Alinhado: Domínio em [2 a 3 tecnologias da vaga que o candidato possui].\n\nPortfólio:\n- GitHub: [https://github.com/VictorJoseNogueira](https://github.com/VictorJoseNogueira)\n- LinkedIn: [https://www.linkedin.com/in/victor-nogueira-193a67256](https://www.linkedin.com/in/victor-nogueira-193a67256)\n\nEstimativa Comercial Inicial:\n- Prazo Estimado: [Sua estimativa realista de tempo baseada na complexidade, ex: 4 semanas] | Investimento: [Valor calculado no passo 3]. *(Não inclui custos de infraestrutura/hospedagem)*.\n\n[Elabore 1 pergunta técnica curta e altamente específica sobre a arquitetura ou regra de negócio do projeto para induzir resposta]. Podemos alinhar os detalhes em uma breve conversa de 5 minutos esta semana?\n\nNo aguardo,\nVictor José Nogueira Santos | victorvalim1@gmail.com"
 }

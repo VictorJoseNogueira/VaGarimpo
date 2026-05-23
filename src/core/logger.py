@@ -7,16 +7,16 @@ LOG_PATH = os.getenv(
     os.path.join(os.path.dirname(__file__), "..", "scraper.log"),
 )
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
 
 
 class ColoredFormatter(logging.Formatter):
     COLORS = {
-        "DEBUG": "\033[94m",      # Azul
-        "INFO": "\033[92m",       # Verde
-        "WARNING": "\033[93m",    # Amarelo
-        "ERROR": "\033[91m",      # Vermelho
-        "CRITICAL": "\033[95m",   # Magenta
+        "DEBUG": "\033[94m",  # Azul
+        "INFO": "\033[92m",  # Verde
+        "WARNING": "\033[93m",  # Amarelo
+        "ERROR": "\033[91m",  # Vermelho
+        "CRITICAL": "\033[95m",  # Magenta
     }
 
     RESET = "\033[0m"
@@ -38,7 +38,7 @@ class ColoredFormatter(logging.Formatter):
 logger = logging.getLogger("scrapper")
 
 if not logger.handlers:
-    level = getattr(logging, LOG_LEVEL, logging.INFO)
+    level = getattr(logging, LOG_LEVEL, logging.DEBUG)
 
     logger.setLevel(level)
     logger.propagate = False

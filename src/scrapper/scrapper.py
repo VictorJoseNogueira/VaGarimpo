@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 from src.core.database import db_connect, db_disconnect
 from src.core.logger import logger
-from src.services.db_service import post_a_job, read_specific_job, update_a_job
+from src.database.db_service import post_a_job, read_specific_job
 
 DEFAULT_MAX_PAGES = 1
 DEFAULT_INITIAL_MAX_PAGES = 1
@@ -26,16 +26,16 @@ DESCRIPTION_ELEMENT = "div[class*='project-description']"
 SKILLS_ELEMENT = "div.container-habilidades a.habilidade"
 USER_INFO_ELEMENT = "div.info-usuario-nome span.name"
 MAPING_KEYS = {
-    'categoria': 'category',
-    'subcategoria': 'subcategory',
-    'orçamento': 'budget',
-    'nível de experiência': 'experience_level',
-    'visibilidade': 'visibility',
-    'propostas': 'proposals',
-    'interessados': 'interested',
-    "propostas excluídas":"exclude_proposals",
-    'tempo restante': 'time_remaining',
-    'valor mínimo': 'minimum_value'
+    "categoria": "category",
+    "subcategoria": "subcategory",
+    "orçamento": "budget",
+    "nível de experiência": "experience_level",
+    "visibilidade": "visibility",
+    "propostas": "proposals",
+    "interessados": "interested",
+    "propostas excluídas": "exclude_proposals",
+    "tempo restante": "time_remaining",
+    "valor mínimo": "minimum_value",
 }
 
 
@@ -143,7 +143,9 @@ class scrapper99Freela:
 
         complete_url = self._normalize_project_url(relative_url)
         if read_specific_job(complete_url):
-            logger.debug("Projeto já existe no banco e será ignorado: %s", complete_url)
+            logger.debug(
+                "Projeto já existe no banco e será ignorado: %s", complete_url
+            )
             return
 
         clean_title = re.sub(r"\s+", " ", titles).strip()
@@ -219,7 +221,7 @@ class scrapper99Freela:
         except Exception as e:
             logger.warning("Erro ao coletar descrição para %s: %s", title, e)
             info["descricao"] = "Descrição não disponível"
-    
+
     def _extract_details(self, page, doc: dict, title: str) -> dict:
         """Extrai tabela de detalhes do projeto da página."""
         try:
@@ -246,9 +248,9 @@ class scrapper99Freela:
             )
             doc["details"] = {}
             return {}
-    
+
     @staticmethod
-    def _format_brute_data(doc:dict)->dict:
+    def _format_brute_data(doc: dict) -> dict:
         correct_data = {}
         for key, value in doc.items():
             clean_key = key.strip().lower()
@@ -258,7 +260,6 @@ class scrapper99Freela:
             else:
                 correct_data[clean_key] = value
         return correct_data
-
 
     @staticmethod
     def _extract_elements(page, element) -> str:
@@ -287,14 +288,13 @@ class scrapper99Freela:
             element_locator.first.wait_for(
                 state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
             )
-            
-            # all_inner_texts retorna uma lista com os textos de todos os elementos encontrados
-            elements_text = element_locator.all_inner_texts()            
+
+            elements_text = element_locator.all_inner_texts()
             # Remove espaços em branco e padroniza para minúsculas
             return [text.strip().lower() for text in elements_text if text.strip()]
         except Exception as e:
             logger.warning("Erro ao coletar lista de elementos %s: %s", element, e)
-            return []  # Retorna lista vazia em caso de falha, evitando quebrar o ListField no MongoDB
+            return []
 
     def scrap_page_get_data(self):
         """Orquestra a coleta de dados para todos os projetos."""
@@ -346,6 +346,7 @@ class scrapper99Freela:
             logger.debug(f"Salvando no MongoDB - {key}: {value}")
             post_a_job(self.projects_links_dict[key])
         return self
+
 
 def main():
     freela = r"https://www.99freelas.com.br/projects?categoria=web-mobile-e-software&sub-categorias=banco-de-dados+desenvolvimento-desktop+desenvolvimento-web&niveis-experiencia=iniciante%2Cintermediario&page=4"

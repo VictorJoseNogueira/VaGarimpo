@@ -1,20 +1,25 @@
 from mongoengine import (
     Document,
+    DynamicEmbeddedDocument,
     EmbeddedDocument,
     EmbeddedDocumentField,
     FloatField,
     ListField,
     StringField,
     URLField,
-    DynamicEmbeddedDocument
 )
 
 
-class LlmResponse(EmbeddedDocument):
+from mongoengine import DynamicEmbeddedDocument, StringField, FloatField, ListField
+
+class LlmResponse(DynamicEmbeddedDocument):
     status = StringField()
     match_percentage = FloatField()
+    strengths = ListField(StringField())
+    weaknesses = ListField(StringField())
+    payments = StringField()
+    proposta = StringField()
     motivation = StringField()
-
 
 # Modelos auxiliares para os objetos aninhados
 class JobDetails(DynamicEmbeddedDocument):
