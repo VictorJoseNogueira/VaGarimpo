@@ -1,0 +1,179 @@
+{
+
+  "dados_pessoais": {
+
+    "nome": "VICTOR JOSÉ NOGUEIRA SANTOS",
+
+    "email": "victorvalim1@gmail.com",
+
+    "localizacao": "Mauá, SP"
+
+  },
+
+  "resumo_profissional": "Desenvolvedor FullSTACK com experiência em automação de processos, desenvolvimento de sistemas completos do front-end ao banco de dados e suporte a troubleshooting em rotinas técnicas. Atuo com Python, APIS REST, integrações entre sistemas, análise de dados e boas práticas de desenvolvimento, com foco em entregar soluções que aumentam a produtividade e atendem às necessidades do usuário final.",
+
+  "experiencia_profissional": [
+
+    {
+
+      "empresa": "Medcof Educação S. A.",
+
+      "cargo": "Analista de Automação",
+
+      "periodo": "12/2024-03/2025",
+
+      "atividades": [
+
+        "Desenvolvi um sistema completo de assistente de pagamentos, abrangendo front-end, back-end e banco de dados, com processamento de cerca de R$ 40 mil por ciclo.",
+
+        "Implementei scripts para automatizar processos internos, reduzindo o tempo operacional da equipe e aumentando a produtividade em 80%.",
+
+        "Eliminei aproximadamente 300 horas de trabalho manual por ciclo de pagamento (cerca de 100 horas/mês) ao automatizar a auditoria de aulas e o cálculo de contratos.",
+
+        "Executei tratamento de dados, removendo apelidos e padronizando nomes completos de professores, reduzindo erros de busca e acelerando consultas em 40% em planilhas com mais de 1.000 linhas."
+
+      ]
+
+    },
+
+    {
+
+      "empresa": "Centro de Proteção Animal (CPA) de Mauá",
+
+      "cargo": "Desenvolvedor de Sistema de Gestão (Projeto Acadêmico)",
+
+      "periodo": "03/2023-04/2023",
+
+      "atividades": [
+
+        "Desenvolvi um sistema integrado de gestão para centralizar dados de pacientes, tutores e prontuários médicos de animais.",
+
+        "Atuei desde o levantamento de requisitos com profissionais do CPA até a implementação final, aplicando metodologias ágeis.",
+
+        "Apliquei o ciclo Ouvir-Criar-Implementar baseado em feedback real dos usuários para garantir a eficácia da solução."
+
+      ]
+
+    }
+
+  ],
+
+  "formacao_academica": [
+
+    {
+
+      "instituicao": "UNIVESP",
+
+      "curso": "Bacharelado em Ciência de Dados",
+
+      "conclusao": "12/2027 (Previsão)"
+
+    },
+
+    {
+
+      "instituicao": "UNIVESP",
+
+      "curso": "Bacharelado em Tecnologia da Informação",
+
+      "conclusao": "Concluído 06/2025"
+
+    }
+
+  ],
+
+  "habilidades_tecnicas": [
+
+    "Python",
+
+    "JavaScript",
+
+    "Java",
+
+    "SQL",
+
+    "HTML",
+
+    "CSS",
+
+    "Bootstrap",
+
+    "Pandas",
+
+    "Numpy",
+
+    "Node.js",
+
+    "Django",
+
+    "Flask",
+
+    "FastAPI",
+
+    "Express",
+
+    "React",
+
+    "Vue.js",
+
+    "MySQL",
+
+    "PostgreSQL",
+
+    "Docker",
+
+    "Git",
+
+    "GitHub",
+
+    "Excel",
+
+    "Power BI",
+
+    "Figma",
+
+    "Programação Orientada a Objetos (POO)",
+
+    "Design Thinking",
+
+    "REST API",
+
+    "ETL",
+
+    "Web Scraping",
+
+    "Análise Exploratória de Dados",
+
+    "Metodologias Ágeis (Scrum)",
+
+    "Variáveis de ambiente (.env)"
+
+  ],
+
+  "idiomas": [
+
+    {
+
+      "idioma": "Inglês",
+
+      "nivel": "Avançado (C1)"
+
+    }
+
+  ],
+
+  "certificacoes": [
+
+    "Artificial Intelligence Fundamentals - IBM",
+
+    "Prompt Engineering Foundation Learner 2025 - Certiprof",
+
+    "Certificação Excel Processo Seletivo da Hashtag Treinamentos - Hashtag Treinamentos",
+
+    "EF SET English Certificate 61/100 (C1 Advanced) - EF SET",
+
+    "AWS Educate Introduction to Cloud 101 - Training Badge - Amazon Web Services (AWS)"
+
+  ]
+
+}

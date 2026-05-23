@@ -173,7 +173,7 @@ class scrapper99Freela:
             )
             page_number = DEFAULT_PAGE_NUMBER
             browser = p.chromium.launch(
-                headless=False, slow_mo=100,
+                headless=True,
                 args=PLAYWRIGHT_LAUNCH_ARGS,
             )
             page = browser.new_page()
@@ -300,7 +300,7 @@ class scrapper99Freela:
         """Orquestra a coleta de dados para todos os projetos."""
         with sync_playwright() as p:
             start_time = time.time()
-            browser = p.chromium.launch(headless=False, slow_mo=100, args=PLAYWRIGHT_LAUNCH_ARGS)
+            browser = p.chromium.launch(headless=True, args=PLAYWRIGHT_LAUNCH_ARGS)
             page = browser.new_page()
             total_links = len(self.projects_links_dict)
             count = 1
