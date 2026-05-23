@@ -1,7 +1,7 @@
 import json
 import re  # <--- Importe o módulo de Regex
 
-from app.logger import logger
+from src.core.logger import logger
 
 JSON_PREVIEW_LENGTH = 200
 
@@ -22,6 +22,7 @@ def extract_valid_json(text):
                 len(parsed) if isinstance(parsed, dict) else 0,
             )
             return parsed
+        logger.debug("extract_valid_json: nenhum JSON válido encontrado no texto de entrada")
         return None
     except (json.JSONDecodeError, AttributeError):
         snippet = (

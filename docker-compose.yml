@@ -2,11 +2,27 @@ services:
   scrapper:
     build: .
     image: freelas-scrapper
+    init: true
     volumes:
-      - ./app/data:/app/data
-      - ./app:/app/app
-      - ./main.py:/app/main.py
+      - ./:/app
     env_file:
       - .env
     command: python main.py --mode all
+    depends_on:
+      - mongo-db
+    restart: on-failure
     
+  mongo-db:
+    image: mongo:7.0
+    container_name: mongo-db-container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    env_file:
+      - .env
+    restart: unless-stopped
+
+
+volumes:
+  mongo_data:
