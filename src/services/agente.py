@@ -19,7 +19,8 @@ API_KEY = os.getenv("API_KEY")
 model_llama_3_3_70b_versatile = "llama-3.3-70b-versatile"
 model_llama_3_1_8b_instant = "llama-3.1-8b-instant"
 
-agent_prompt = "# importar prompt"
+with open("src/assets/prompts/agent_prompt.txt", "r", encoding="utf-8") as file:
+    agent_prompt = file.read()
 
 
 def run_agent(user_input: dict | str) -> str:
