@@ -7,7 +7,7 @@ from pathlib import Path
 from src.core.logger import logger
 
 ROOT_DIR = Path(__file__).resolve().parent
-SCRAPER_MODULE = "src.scrapper.scrapper"
+SCRAPER_MODULE = "src.scraper.scrapper"
 GET_JOB_MODULE = "src.services.get_job"
 
 

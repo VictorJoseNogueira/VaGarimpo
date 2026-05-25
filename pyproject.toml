@@ -22,12 +22,17 @@ preview = true
 quote-style = "double"
 
 [tool.taskipy.tasks]
+# Qualidade de Código
 lint = "ruff check ."
-lint_fix = "ruff check --fix"
 format = "ruff format ."
-check = "task lint && task lint_fix && task format"
-scrapper = "python3 -m src.scrapper.scrapper"
-db = "python3 -m src.core.database"
-freeze = "pipreqs . --force"
+fix = "ruff check --fix && ruff format ."
+check = "task fix && task lint"
+
+# Gerenciamento de Dependências
 install = "pip install -r requirements.txt"
+freeze = "pipreqs . --force"
+
+# Execução e Contêineres (Docker)
 run = "docker compose up --build"
+scraper = "MODE=scraper docker compose up --build"
+jobs = "MODE=get-job docker compose up --build"

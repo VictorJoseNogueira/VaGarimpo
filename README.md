@@ -1,154 +1,146 @@
-# Scrapper de Vagas — Coletor 99Freelas
+# Scrapper de Vagas — 99Freelas
 
-Visão geral
-------------
-Projeto Python para coleta (scraping) de vagas do site 99Freelas, salvando os dados em MongoDB. Fornece um scraper baseado em Playwright, persistência via MongoEngine/MongoDB e um pequeno agente que usa Groq para chamadas a LLMs.
+## Visão Geral
 
-Pré-requisitos
---------------
-- Python 3.11+ (recomendado)
-- Um ambiente virtual (venv, virtualenv, etc.)
-- MongoDB acessível e variável de ambiente `MONGO_URI` configurada
-- Variável `API_KEY` para o agente (quando usar `src.services.agente`) 
-- Playwright: navegadores instalados via `python -m playwright install`
+Sistema de coleta e triagem automatizada de vagas publicadas no [99Freelas](https://www.99freelas.com.br). O projeto utiliza automação de navegador para extrair listagens e detalhes de projetos, persiste os dados em MongoDB e aplica filtros heurísticos (palavras banidas) e semânticos via modelos de linguagem (Groq). O ponto de entrada `main.py` orquestra dois pipelines independentes — scraping e processamento com LLM — que podem ser executados isoladamente ou em sequência.
 
-Instalação
-----------
-1. Crie e ative um ambiente virtual:
+## Tecnologias Utilizadas
+
+| Tecnologia | Uso no projeto |
+| --- | --- |
+| **Python 3.11+** | Linguagem base e orquestração via CLI |
+| **Playwright** | Automação headless do Chromium para navegação e extração de dados no site |
+| **MongoEngine** | ODM para modelagem e persistência de documentos no MongoDB |
+| **PyMongo** | Tratamento de erros de conexão (`ServerSelectionTimeoutError`) |
+| **python-dotenv** | Carregamento de variáveis de ambiente a partir de `.env` |
+| **Groq API** | Chamadas a LLMs para pontuação e filtragem de vagas (`AgentManager`) |
+
+## Estrutura do Projeto
+
+```
+scrapper/
+├── main.py                 # Ponto de entrada: coordena scraper e get-job
+└── src/
+    ├── core/
+    │   ├── database.py     # Conexão e desconexão com MongoDB (MongoEngine)
+    │   └── logger.py       # Logger centralizado (console colorido + arquivo)
+    ├── scraper/
+    │   ├── scrapper.py     # Classe scrapper99Freela: coleta e persistência
+    │   └── get_json.py     # Utilitário para extrair JSON de textos mistos
+    ├── services/
+    │   ├── agente.py       # Cliente Groq com rotação de modelos e retries
+    │   ├── get_job.py      # Pipeline de filtro LLM sobre vagas já salvas
+    │   └── is_json.py      # Limpeza e parse de respostas JSON vindas do LLM
+    ├── database/
+    │   └── db_service.py   # CRUD: criar, ler, atualizar e excluir vagas
+    ├── models/
+    │   └── job_model.py    # Schema MongoEngine (JobData, LlmResponse, etc.)
+    └── assets/prompts/     # Prompts de sistema para os agentes de filtro
+```
+
+**Fluxo de dados:** o scraper coleta links e metadados → `db_service.post_a_job` grava em `jobs_collection` → `get_job.JobFilterManager` lê vagas pendentes de score → `AgentManager` consulta a Groq → resultados são gravados em `llm_response.first_match`.
+
+## Configuração e Instalação
+
+### Pré-requisitos
+
+- Python 3.11 ou superior
+- Instância MongoDB acessível
+- Conta e chave de API na [Groq](https://console.groq.com/) (necessária apenas para o modo `get-job`)
+
+### Passo a passo
+
+1. **Clone o repositório e acesse o diretório do projeto.**
+
+2. **Crie e ative um ambiente virtual:**
 
 ```bash
 python -m venv venv
 source venv/bin/activate
 ```
 
-2. Instale dependências (antes ajustar `requirements.txt` conforme auditoria abaixo):
+3. **Instale as dependências do projeto** (via gerenciador de pacotes do seu ambiente) e **instale os navegadores do Playwright:**
 
 ```bash
 pip install -r requirements.txt
-# além disso, instale navegadores do Playwright
 python -m playwright install
 ```
 
+4. **Configure as variáveis de ambiente** criando um arquivo `.env` na raiz do projeto:
 
-Uso
----
-Executar o ponto de entrada:
+```env
+# Obrigatória — string de conexão MongoDB
+MONGO_URI=mongodb://usuario:senha@host:27017/nome_do_banco
+
+# Obrigatória para o pipeline get-job — chave da API Groq
+GROQ_API_KEY=sua_chave_aqui
+
+# Opcionais
+JSON_PATH=src/data/projects.json
+LOG_PATH=src/scraper.log
+LOG_LEVEL=INFO
+APP_MODE=all
+```
+
+> **Segurança:** nunca commite o arquivo `.env` nem exponha credenciais em logs ou documentação pública.
+
+5. **Execute o projeto** a partir da raiz (garanta que `PYTHONPATH` inclua o diretório raiz — o `main.py` configura isso automaticamente ao delegar subprocessos):
 
 ```bash
-python main.py --mode scraper      # roda somente o scraper
-python main.py --mode get-job     # roda somente o módulo get-job (arquivo em src/services/get_job.py)
-python main.py --mode all         # executa scraper e get-job (padrão)
+python main.py
 ```
 
-Variáveis de ambiente importantes
-- `MONGO_URI` — string de conexão com MongoDB (obrigatória para gravação)
-- `API_KEY` — chave para o agente Groq (se utilizar `src/services.agente`)
-- `JSON_PATH` — caminho para salvar JSONs (opcional; padrão `src/data/projects.json`)
-- `LOG_PATH` — caminho do arquivo de log (opcional)
+## Endpoints / Funcionalidades Principais
 
-Estrutura do projeto
---------------------
-- `main.py` — ponto de entrada que coordena execução dos módulos.
-- `src/` — código-fonte do projeto
-  - `src/core/logger.py` — configuração de logging (console + arquivo)
-  - `src/core/database.py` — helper para conexão com MongoDB
-  - `src/scrapper/` — scraper principal e utilitários
-    - `scrapper.py` — classe `scrapper99Freela` que usa Playwright e grava no MongoDB
-    - `get_json.py` — utilitário para extrair JSON de textos
-  - `src/services/` — serviços auxiliares
-    - `db_service.py` — funções de persistência (post/read/update/delete)
-    - `agente.py` — cliente simples para chamadas Groq (LLM)
-    - `get_job.py` — (excluído do escopo da auditoria por instrução do contexto)
-  - `src/models/job_model.py` — modelos `mongoengine` para os documentos de vagas
-  - `src/assets/prompts/agent_prompt.txt` — prompt usado pelo agente
+Este projeto **não expõe uma API REST**. A interface principal é a linha de comando via `main.py` e a execução direta dos módulos.
 
-Auditoria de dependências (`requirements.txt`)
--------------------------------------------
+### Modos de execução (`main.py`)
 
-Resumo da varredura do código (.py em `main.py` e `src/`, excluindo `get_job.py`): imports detectados que demandam pacotes externos:
-
-- `python-dotenv` (import: `from dotenv import load_dotenv`) — usado
-- `playwright` (import: `from playwright.sync_api import sync_playwright`) — usado
-- `pymongo` (import: `from pymongo.errors import ServerSelectionTimeoutError`) — usado
-- `groq` (import: `from groq import Groq`) — usado
-- `mongoengine` (import: `from mongoengine import ...`) — usado, mas ausente em `requirements.txt`
-
-Análise comparativa com o `requirements.txt` atual
-
-- Mantém (recomendado manter):
-  - `python-dotenv`
-  - `playwright`
-  - `pymongo`
-  - `groq`
-
-- Adicionar (necessário no `requirements.txt`):
-  - `mongoengine`  # utilizado em `src/core/database.py` e `src/models/job_model.py`
-
-- Remover (parecem não ser usados pelo código escaneado):
-  - Pacotes do ecossistema spaCy e NLP listados que não são usados: `spacy`, `thinc`, `blis`, `murmurhash`, `preshed`, `srsly`, `spacy-legacy`, `spacy-loggers`, `pt_core_news_sm` (modelo), `wasabi`, `catalogue`, `confection`, `mdurl`, `markdown-it-py`, `MarkupSafe` (provavelmente transitiva)
-  - Pacotes relacionados a ferramentas/linters/auxiliares que não aparecem no código: `ruff`, `taskipy`, `lazy-model`, `packaging`, `typing-inspection`, `typing_extensions`, `annotated-doc`, `annotated-types`
-  - Outros não referenciados no código: `httpx`, `httpcore`, `anyio`, `requests`, `rich`, `Pygments`, `psutil`, `motor`, `beanie`, `smart_open`
-
-Observações e recomendações
--------------------------
-- Há pacotes listados que parecem ser dependências de outro projeto (por exemplo, muitos pacotes do ecossistema spaCy) — mantenha-os apenas se você pretende usar funcionalidades de NLP; caso contrário, remover do `requirements.txt` reduzirá o tamanho do ambiente.
-- Adicione `mongoengine` ao `requirements.txt`. Exemplo:
-
-```text
-mongoengine>=1.0.0
-```
-
-- Se for usar `playwright`, lembre-se de executar `python -m playwright install` após instalar as dependências.
-- Se preferir, gere um novo `requirements.txt` reprojetado com somente as dependências necessárias para execução atual:
-
-Manter apenas o essencial (exemplo mínimo sugerido):
-
-```text
-python-dotenv
-playwright
-pymongo
-groq
-mongoengine
-```
-
-Próximos passos sugeridos
-------------------------
-- Confirmar se pretende manter módulos de NLP; se não, atualizar `requirements.txt` removendo pacotes supérfluos.
-- Adicionar `mongoengine` ao `requirements.txt` e rodar `pip install -r requirements.txt`.
-- Executar testes locais com `MONGO_URI` configurada.
-
-Arquivo criado
--------------
-Criei este arquivo de documentação e auditoria: [README.md](README.md)
-
-Se desejar, atualizo o `requirements.txt` automaticamente com as mudanças recomendadas.
-
-| Sigla | Significado em Inglês | Significado em Português |
+| Modo | Comando | Descrição |
 | --- | --- | --- |
-| RPM | Requests per minute | Solicitações por minuto |
-| RPD | Requests per day | Solicitações por dia |
-| TPM | Tokens per minute | Tokens por minuto |
-| TPD | Tokens per day | Tokens por dia |
-| ASH | Audio seconds per hour | Segundos de áudio por hora |
-| ASD | Audio seconds per day | Segundos de áudio por dia |
-| ITPM | Input tokens per minute | Tokens de entrada por minuto |
-| OTPM | Output tokens per minute | Tokens de saída por minuto |
+| `scraper` | `python main.py --mode scraper` | Executa apenas o coletor Playwright (`src.scraper.scrapper`) |
+| `get-job` | `python main.py --mode get-job` | Executa apenas o filtro LLM (`src.services.get_job`) |
+| `all` | `python main.py --mode all` | Executa scraper e, em seguida, get-job (padrão; pode ser definido por `APP_MODE`) |
 
-| Model | RPM | RPD | TPM | TPD | ASH | ASD |
-| --- | --- | --- | --- | --- | --- | --- |
-| allam-2-7b | 30 | 7K | 6K | 500K | - | - |
-| canopylabs/orpheus-arabic-saudi | 10 | 100 | 1.2K | 3.6K | - | - |
-| canopylabs/orpheus-v1-english | 10 | 100 | 1.2K | 3.6K | - | - |
-| groq/compound | 30 | 250 | 70K | - | - | - |
-| groq/compound-mini | 30 | 250 | 70K | - | - | - |
-| llama-3.1-8b-instant | 30 | 14.4K | 6K | 500K | - | - |
-| llama-3.3-70b-versatile | 30 | 1K | 12K | 100K | - | - |
-| meta-llama/llama-4-scout-17b-16e-instruct | 30 | 1K | 30K | 500K | - | - |
-| meta-llama/llama-prompt-guard-2-22m | 30 | 14.4K | 15K | 500K | - | - |
-| meta-llama/llama-prompt-guard-2-86m | 30 | 14.4K | 15K | 500K | - | - |
-| openai/gpt-oss-120b | 30 | 1K | 8K | 200K | - | - |
-| openai/gpt-oss-20b | 30 | 1K | 8K | 200K | - | - |
-| openai/gpt-oss-safeguard-20b | 30 | 1K | 8K | 200K | - | - |
-| qwen/qwen3-32b | 60 | 1K | 6K | 500K | - | - |
-| whisper-large-v3 | 20 | 2K | - | - | 7.2K | 28.8K |
-| whisper-large-v3-turbo | 20 | 2K | - | - | 7.2K | 28.8K |
+### Pipeline de scraping (`scrapper99Freela`)
+
+| Etapa | Método | Comportamento |
+| --- | --- | --- |
+| Coleta de links | `scrap_page_get_links()` | Navega páginas paginadas do 99Freelas, ignora projetos já existentes no banco e filtra títulos com palavras banidas (PHP, WordPress, e-commerce, etc.) |
+| Coleta de detalhes | `scrap_page_get_data()` | Para cada link válido, extrai descrição, habilidades, nome do contratante e tabela de detalhes (categoria, orçamento, propostas, etc.) |
+| Persistência | `save_mongodb()` | Grava cada vaga via `post_a_job`, respeitando unicidade do campo `link` |
+
+Execução isolada do scraper:
+
+```bash
+python -m src.scraper.scrapper
+```
+
+### Pipeline de filtro LLM (`JobFilterManager`)
+
+| Etapa | Método | Comportamento |
+| --- | --- | --- |
+| Primeiro filtro | `run_first_filter()` | Para cada vaga sem score válido, envia título e descrição ao `AgentManager` com o prompt `first_filter.txt`; persiste raciocínio e score em `llm_response.first_match` |
+
+Execução isolada do filtro:
+
+```bash
+python -m src.services.get_job
+```
+
+### Operações de banco (`db_service`)
+
+| Função | Descrição |
+| --- | --- |
+| `post_a_job(data)` | Cria documento `JobData`; ignora duplicatas pelo campo `link` |
+| `read_specific_job(url)` | Retorna vaga pelo link ou `None` |
+| `read_all_jobs()` | Lista todas as vagas da coleção `jobs_collection` |
+| `update_a_job(job_id, data)` | Atualização parcial via operadores MongoEngine (`set__...`) |
+| `update_a_job_url(url, data)` | Atualização por URL |
+| `delete_a_job(url)` | Remove vaga pelo link |
+
+### Agente Groq (`AgentManager`)
+
+- Modelos em rotação: `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b`, `openai/gpt-oss-20b`
+- Até 4 tentativas com troca automática de modelo em caso de falha
+- Temperatura `0.0`, máximo de `2048` tokens por resposta

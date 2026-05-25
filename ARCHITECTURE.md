@@ -39,15 +39,21 @@ scrapper/                      # raiz do repositório
 ├── spec_driven_development.md
 ├── src/
 │   ├── core/
+│   │   ├── database.py
 │   │   └── logger.py
-│   ├── data/
-│   │   └── projects.json
-│   └── services/
-│       ├── agente.py
-│       ├── get_job.py
-│       ├── get_json.py
-│       ├── scrapper.py
-│       └── tester.py
+│   ├── scraper/
+│   │   ├── scrapper.py
+│   │   └── get_json.py
+│   ├── services/
+│   │   ├── agente.py
+│   │   ├── get_job.py
+│   │   └── is_json.py
+│   ├── database/
+│   │   └── db_service.py
+│   ├── models/
+│   │   └── job_model.py
+│   └── data/
+│       └── projects.json
 └── venv/ (ambiente virtual local)
 ```
 
@@ -55,8 +61,12 @@ scrapper/                      # raiz do repositório
 
 - `src/`
   - Agrupa a lógica principal da aplicação.
+- `src/scraper/`
+  - Contém o coletor Playwright (`scrapper.py`) e utilitário de extração de JSON (`get_json.py`).
 - `src/services/`
-  - Contém os módulos de scraping, processamento de vagas, agente LLM e extrator de JSON.
+  - Contém o processamento de vagas com LLM, agente Groq e parser de respostas JSON.
+- `src/database/` e `src/models/`
+  - Camada de persistência MongoDB (CRUD e schema MongoEngine).
 - `src/data/`
   - Armazena o arquivo `projects.json` usado como entrada e saída do pipeline.
 - `venv/`
@@ -80,9 +90,12 @@ scrapper/                      # raiz do repositório
 `src/core/logger.py`
   - Configura o logging compartilhado para a aplicação.
 
-`src/scrapper/scrapper.py`
+`src/scraper/scrapper.py`
   - Realiza scraping de projetos do 99freelas.
-  - Extrai atributos de cada projeto e grava o JSON em `src/data/projects.json`.
+  - Extrai atributos de cada projeto e persiste via `db_service.post_a_job` no MongoDB.
+
+`src/scraper/get_json.py`
+  - Extrai JSON válido de textos mistos (utilitário auxiliar).
 
 `src/services/get_job.py`
   - Processa cada item em `projects.json` que ainda não possui `llm_response`.
@@ -92,11 +105,8 @@ scrapper/                      # raiz do repositório
   - Faz a chamada ao cliente `groq.Groq`.
   - Monta prompt e retorna a resposta de texto.
 
-`src/services/get_json.py`
-  - Extrai o JSON válido do texto retornado pelo agente.
-
-`src/services/tester.py`
-  - Arquivo presente para testes/experimentos, sem fluxo principal ativo.
+`src/services/is_json.py`
+  - Limpa e faz parse de respostas JSON vindas do agente LLM.
 
 - `requirements.txt`
   - Lista as dependências Python necessárias para execução.
@@ -114,7 +124,7 @@ scrapper/                      # raiz do repositório
   - `scraper`
   - `get-job`
   - `all`
-O `main.py` chama `src.scrapper.scrapper` e `src.services.get_job` via `python -m`.
+O `main.py` chama `src.scraper.scrapper` e `src.services.get_job` via `python -m`.
 
 ## Dependências importantes e integrações externas
 
