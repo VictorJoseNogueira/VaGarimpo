@@ -121,6 +121,7 @@ class JobFilterManager:
 
     def run_final_filter(self):
         """Processa a etapa final quando o score do primeiro filtro supera o limiar."""
+        self.jobs = read_all_jobs()
         processed_count = 0
         for job in self.jobs:
             score = self._get_first_match_score(job)

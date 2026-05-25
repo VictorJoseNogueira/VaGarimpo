@@ -57,3 +57,10 @@ def delete_a_job(url: str):
         job.delete()
     else:
         raise ValueError(f"Job com url '{url}' não encontrado.")
+
+
+def mark_jobs_email_sent(job_ids: list[str]) -> int:
+    """Marca vagas como enviadas por e-mail para evitar reenvio."""
+    if not job_ids:
+        return 0
+    return JobData.objects(id__in=job_ids).update(set__enviado_email=True)

@@ -15,6 +15,3 @@ Crie o documento utilizando Markdown com a seguinte estrutura obrigatória:
 3. **Estrutura do Projeto:** Explicação breve da arquitetura do diretório `src/`.
 4. **Configuração e Instalação:** Instruções passo a passo para configurar variáveis de ambiente (sem expor dados sensíveis) e rodar o projeto localmente.
 5. **Endpoints / Funcionalidades Principais:** Documentação sucinta das principais rotas da API REST ou rotinas de execução encontradas no código.
-
-# Restrição de Saída
-Retorne EXCLUSIVAMENTE o conteúdo do `README.md` em formato Markdown. Não adicione saudações, conclusões ou qualquer texto fora do bloco de código. O idioma do README deve ser Português do Brasil.

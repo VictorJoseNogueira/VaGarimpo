@@ -9,6 +9,7 @@ from src.core.database import db_connect, db_disconnect
 from src.core.logger import logger
 from src.database.db_service import post_a_job, read_specific_job
 
+MAX_PAGES = 1
 DEFAULT_MAX_PAGES = 1
 DEFAULT_INITIAL_MAX_PAGES = 1
 DEFAULT_PAGE_NUMBER = 1
@@ -354,7 +355,7 @@ def main():
 
     json_path = os.getenv("JSON_PATH", "src/data/projects.json")
     scrapper99Freela(
-        link=freela, json_path=json_path, max_pages=2
+        link=freela, json_path=json_path, max_pages=MAX_PAGES
     ).scrap_page_get_links().scrap_page_get_data().save_mongodb()
     db_disconnect()
 

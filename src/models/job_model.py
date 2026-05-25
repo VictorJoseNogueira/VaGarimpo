@@ -1,18 +1,22 @@
+from datetime import datetime
+
 from mongoengine import (
+    BooleanField,
+    DateTimeField,
     Document,
     DynamicEmbeddedDocument,
     EmbeddedDocumentField,
     FloatField,
+    IntField,
     ListField,
     StringField,
     URLField,
-    IntField
 )
 
 
 class FirstMatch(DynamicEmbeddedDocument):
     raciocinio_passo_a_passo = StringField()
-    score = IntField()  # se eu adicionar um index aqui e buscar por score > 75, vai ser muito mais rápido para buscar as vagas que precisam de segunda etapa do filtro ?
+    score = IntField()
 
 
 class LlmResponse(DynamicEmbeddedDocument):
@@ -49,6 +53,8 @@ class JobData(Document):
     details = EmbeddedDocumentField(JobDetails)
     llm_response = EmbeddedDocumentField(LlmResponse)
     userName = StringField()
+    scrapp_at = DateTimeField(default=datetime.utcnow)
+    enviado_email = BooleanField(default=False)
 
     # Substitui a class Settings do Beanie pelo dicionário meta do MongoEngine
     meta = {"collection": "jobs_collection"}
