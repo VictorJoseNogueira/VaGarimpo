@@ -18,7 +18,7 @@ class JobFilterManager:
         self.first_agent = AgentManager(system_prompt=first_filter_prompt)
         self.final_agent = AgentManager(system_prompt=final_filter_prompt)
 
-    def _get_first_match_score(job):
+    def _get_first_match_score(self, job):
         """Método auxiliar seguro para extrair o score evitando AttributeError."""
         try:
             return job.llm_response.first_match.score
