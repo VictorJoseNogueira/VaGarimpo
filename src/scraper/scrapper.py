@@ -95,6 +95,7 @@ class scrapper99Freela:
             "phoenix",
         ]
         db_connect()
+        logger.warning(f"Iniciando coleta de links com max_pages: {max_pages}")
 
     def _have_a_banned_word(self, word: str):
         have_banned_word = any(
@@ -353,7 +354,7 @@ def main():
 
     json_path = os.getenv("JSON_PATH", "src/data/projects.json")
     scrapper99Freela(
-        link=freela, json_path=json_path, max_pages=4
+        link=freela, json_path=json_path, max_pages=2
     ).scrap_page_get_links().scrap_page_get_data().save_mongodb()
     db_disconnect()
 

@@ -6,12 +6,13 @@ from mongoengine import (
     ListField,
     StringField,
     URLField,
+    IntField
 )
 
 
 class FirstMatch(DynamicEmbeddedDocument):
     raciocinio_passo_a_passo = StringField()
-    score = StringField()
+    score = IntField()  # se eu adicionar um index aqui e buscar por score > 75, vai ser muito mais rápido para buscar as vagas que precisam de segunda etapa do filtro ?
 
 
 class LlmResponse(DynamicEmbeddedDocument):
