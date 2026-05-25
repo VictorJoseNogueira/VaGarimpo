@@ -4,6 +4,10 @@ from src.database.db_service import read_all_jobs, update_a_job
 from src.services.agente import AgentManager
 from src.services.is_json import clean_and_parse_json
 
+FIRST_FILTER_SCORE_THRESHOLD = 75
+DEFAULT_FIRST_MATCH_SCORE = 0
+DEFAULT_MATCH_PERCENTAGE = 0.0
+
 db_connect()
 
 
@@ -25,13 +29,51 @@ class JobFilterManager:
         except AttributeError:
             return None
 
+    def _get_final_filter_status(self, job):
+        """Retorna o status do segundo filtro, se já existir."""
+        try:
+            return job.llm_response.status
+        except AttributeError:
+            return None
+
     @staticmethod
     def _parse_score(value) -> int:
         """Converte o score do LLM para inteiro compatível com IntField."""
         try:
             return int(float(value))
         except (TypeError, ValueError):
-            return 0
+            return DEFAULT_FIRST_MATCH_SCORE
+
+    @staticmethod
+    def _parse_match_percentage(value) -> float:
+        """Converte match_percentage do LLM para FloatField."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return DEFAULT_MATCH_PERCENTAGE
+
+    def _build_final_update_data(self, json_response: dict | None) -> dict:
+        if not json_response:
+            return {
+                "set__llm_response__status": "ERROR RESPONSE",
+                "set__llm_response__match_percentage": DEFAULT_MATCH_PERCENTAGE,
+                "set__llm_response__motivation": "ERROR RESPONSE",
+                "set__llm_response__strengths": [],
+                "set__llm_response__weaknesses": [],
+                "set__llm_response__payments": "ERROR RESPONSE",
+                "set__llm_response__proposta": "ERROR RESPONSE",
+            }
+        return {
+            "set__llm_response__status": json_response.get("status", "ERROR"),
+            "set__llm_response__match_percentage": self._parse_match_percentage(
+                json_response.get("match_percentage", DEFAULT_FIRST_MATCH_SCORE)
+            ),
+            "set__llm_response__motivation": json_response.get("motivation", ""),
+            "set__llm_response__strengths": json_response.get("strengths", []),
+            "set__llm_response__weaknesses": json_response.get("weaknesses", []),
+            "set__llm_response__payments": json_response.get("payments", ""),
+            "set__llm_response__proposta": json_response.get("proposal", ""),
+        }
 
     def run_first_filter(self):
         """Processa a primeira etapa do filtro usando o state interno da classe."""
@@ -57,7 +99,7 @@ class JobFilterManager:
             if not json_response:
                 update_data = {
                     "set__llm_response__first_match__raciocinio_passo_a_passo": "ERROR RESPONSE",  # noqa E501
-                    "set__llm_response__first_match__score": 0,  # noqa E501
+                    "set__llm_response__first_match__score": DEFAULT_FIRST_MATCH_SCORE,  # noqa E501
                 }
             else:
                 update_data = {
@@ -65,7 +107,7 @@ class JobFilterManager:
                         "raciocinio_passo_a_passo", "Campo omitido pelo LLM"
                     ),
                     "set__llm_response__first_match__score": self._parse_score(
-                        json_response.get("score", 0)
+                        json_response.get("score", DEFAULT_FIRST_MATCH_SCORE)
                     ),
                 }
 
@@ -78,35 +120,34 @@ class JobFilterManager:
         return self
 
     def run_final_filter(self):
-        """Processa a etapa final do filtro quando o score do primeiro filtro for maior que 75."""
+        """Processa a etapa final quando o score do primeiro filtro supera o limiar."""
+        processed_count = 0
         for job in self.jobs:
             score = self._get_first_match_score(job)
-            if score is None or score <= 75:
+            if score is None or score <= FIRST_FILTER_SCORE_THRESHOLD:
                 continue
-                job_dict = {
-                    "title": getattr(job, "title", "Título não informado"),
-                    "description": getattr(job, "description", "Descrição não informada"),
-                }
-                response = self.final_agent.execute(user_input=str(job_dict))
-                json_response = clean_and_parse_json(response)
-                if not json_response:
-                    update_data = {
-                        "set__llm_response__status": "ERROR RESPONSE",
-                        "set__llm_response__match_percentage": "ERROR RESPONSE",
-                    }
-                else:
-                    update_data = {
-                        "set__llm_response__status": json_response.get("status", "ERROR"),
-                        "set__llm_response__match_percentage": str(
-                            json_response.get("match_percentage", "ERROR")
-                        ),
-                    }
-                update_a_job(job_id=job.id, data=update_data)
-                logger.info(
-                    f"Atualizando job: {job.title} | Status: {update_data['set__llm_response__status']} | Match Percentage: {update_data['set__llm_response__match_percentage']}"  # noqa E501
-                )
-        logger.info(f"Total de jobs processados: {len(self.jobs)}")
-        logger.info(f"Total de jobs processados com score maior que 75: {len(self.jobs)}")
+
+            if self._get_final_filter_status(job) is not None:
+                continue
+
+            job_dict = {
+                "title": getattr(job, "title", "Título não informado"),
+                "description": getattr(
+                    job, "description", "Descrição não informada"
+                ),
+            }
+            response = self.final_agent.execute(user_input=str(job_dict))
+            json_response = clean_and_parse_json(response)
+            update_data = self._build_final_update_data(json_response)
+            update_a_job(job_id=job.id, data=update_data)
+            processed_count += 1
+            logger.info(
+                f"Atualizando job: {job.title} | Status: {update_data['set__llm_response__status']} | Match Percentage: {update_data['set__llm_response__match_percentage']}"  # noqa E501
+            )
+        logger.info(f"Total de jobs na lista: {len(self.jobs)}")
+        logger.info(
+            f"Total de jobs processados no filtro final (score > {FIRST_FILTER_SCORE_THRESHOLD}): {processed_count}"
+        )
         return self
 # Instanciação correta
 prompt_first = load_prompt("src/assets/prompts/first_filter.txt")
