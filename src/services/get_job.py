@@ -1,4 +1,4 @@
-from src.core.database import db_connect
+from src.core.database import db_connect, db_disconnect
 from src.core.logger import logger
 from src.database.db_service import read_all_jobs, update_a_job
 from src.services.agente import AgentManager
@@ -7,8 +7,6 @@ from src.services.is_json import clean_and_parse_json
 FIRST_FILTER_SCORE_THRESHOLD = 75
 DEFAULT_FIRST_MATCH_SCORE = 0
 DEFAULT_MATCH_PERCENTAGE = 0.0
-
-db_connect()
 
 
 def load_prompt(file_path: str) -> str:
@@ -22,14 +20,16 @@ class JobFilterManager:
         self.first_agent = AgentManager(system_prompt=first_filter_prompt)
         self.final_agent = AgentManager(system_prompt=final_filter_prompt)
 
-    def _get_first_match_score(self, job):
+    @staticmethod
+    def _get_first_match_score(job):
         """Método auxiliar seguro para extrair o score evitando AttributeError."""
         try:
             return job.llm_response.first_match.score
         except AttributeError:
             return None
 
-    def _get_final_filter_status(self, job):
+    @staticmethod
+    def _get_final_filter_status(job):
         """Retorna o status do segundo filtro, se já existir."""
         try:
             return job.llm_response.status
@@ -120,7 +120,7 @@ class JobFilterManager:
         return self
 
     def run_final_filter(self):
-        """Processa a etapa final quando o score do primeiro filtro supera o limiar."""
+        """Processa a etapa final quando o score do primeiro filtro supera o limiar."""  # noqa: E501
         self.jobs = read_all_jobs()
         processed_count = 0
         for job in self.jobs:
@@ -147,16 +147,24 @@ class JobFilterManager:
             )
         logger.info(f"Total de jobs na lista: {len(self.jobs)}")
         logger.info(
-            f"Total de jobs processados no filtro final (score > {FIRST_FILTER_SCORE_THRESHOLD}): {processed_count}"
+            f"Total de jobs processados no filtro final (score > {FIRST_FILTER_SCORE_THRESHOLD}): {processed_count}"  # noqa: E501
         )
         return self
-# Instanciação correta
-prompt_first = load_prompt("src/assets/prompts/first_filter.txt")
-prompt_final = load_prompt("src/assets/prompts/final_filter.txt")
 
-# Inicializa o gerenciador e roda a fase específica
-manager = JobFilterManager(
-    first_filter_prompt=prompt_first, final_filter_prompt=prompt_final
-)
-manager.run_first_filter()
-manager.run_final_filter()
+
+def main() -> None:
+    db_connect()
+    try:
+        prompt_first = load_prompt("src/assets/prompts/first_filter.txt")
+        prompt_final = load_prompt("src/assets/prompts/final_filter.txt")
+        manager = JobFilterManager(
+            first_filter_prompt=prompt_first,
+            final_filter_prompt=prompt_final,
+        )
+        manager.run_first_filter().run_final_filter()
+    finally:
+        db_disconnect()
+
+
+if __name__ == "__main__":
+    main()

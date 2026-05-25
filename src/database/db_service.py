@@ -21,7 +21,7 @@ def post_a_job(data: dict[str, Any]) -> None:
         )
 
     except Exception as e:
-        raise RuntimeError("Erro ao criar entrada no banco de dados: %s", e)
+        raise RuntimeError(f"Erro ao criar entrada no banco de dados: {e}") from e
 
 
 def read_specific_job(url: str) -> object:

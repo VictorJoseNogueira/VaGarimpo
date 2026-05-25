@@ -199,49 +199,56 @@ class scrapper99Freela:
             )
             return self
 
+    @staticmethod
+    def _read_description_text(page, title: str) -> str:
+        logger.debug("Coletando descrição para: %s", title)
+        description_locator = page.locator("div[class*='project-description']")
+        description_locator.wait_for(
+            state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
+        )
+        return description_locator.inner_text().lower()
+
+    def _store_description(
+        self, info: dict, title: str, description_text: str
+    ) -> None:
+        if self._have_a_banned_word(word=description_text):
+            logger.warning(
+                "Descrição de %s bloqueada por conteúdo banido",
+                title,
+            )
+            info["descricao"] = "Descrição bloqueada por conteúdo banido"
+        else:
+            info["descricao"] = description_text.strip()
+
     def _extract_description(self, page, info: dict, title: str) -> None:
         """Extrai descrição do projeto da página."""
         try:
-            logger.debug(
-                "Coletando descrição para: %s",
-                title,
-            )
-            description_locator = page.locator("div[class*='project-description']")
-            description_locator.wait_for(
-                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
-            )
-            description_text = description_locator.inner_text().lower()
-            ban_description = self._have_a_banned_word(word=description_text)
-            if ban_description:
-                logger.warning(
-                    "Descrição de %s bloqueada por conteúdo banido",
-                    title,
-                )
-                info["descricao"] = "Descrição bloqueada por conteúdo banido"
-            else:
-                info["descricao"] = description_text.strip()
+            description_text = self._read_description_text(page, title)
+            self._store_description(info, title, description_text)
         except Exception as e:
             logger.error("Erro ao coletar descrição para %s: %s", title, e)
             info["descricao"] = "Descrição não disponível"
 
+    @staticmethod
+    def _parse_details_table(page, title: str) -> dict:
+        logger.debug("Coletando detalhes para: %s", title)
+        table_locator = page.locator("div.info-adicionais table")
+        table_locator.wait_for(state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS)
+        rows = table_locator.locator("tr").all()
+        info_adicionais = {}
+        for row in rows:
+            chave = row.locator("th").inner_text().strip(" :").lower()
+            valor = row.locator("td").inner_text().strip().lower()
+            info_adicionais[chave] = valor
+            logger.debug(f"{chave} - {valor}")
+        return info_adicionais
+
     def _extract_details(self, page, doc: dict, title: str) -> dict:
         """Extrai tabela de detalhes do projeto da página."""
         try:
-            logger.debug("Coletando detalhes para: %s", title)
-            table_locator = page.locator("div.info-adicionais table")
-            table_locator.wait_for(
-                state="visible", timeout=PLAYWRIGHT_WAIT_TIMEOUT_MS
-            )
-            rows = table_locator.locator("tr").all()
-            info_adicionais = {}
-            for row in rows:
-                chave = row.locator("th").inner_text().strip(" :").lower()
-                valor = row.locator("td").inner_text().strip().lower()
-                info_adicionais[chave] = valor
-                logger.debug(f"{chave} - {valor}")
+            info_adicionais = self._parse_details_table(page, title)
             doc["details"] = info_adicionais
-            clean_data = self._format_brute_data(doc=info_adicionais)
-            return clean_data
+            return self._format_brute_data(doc=info_adicionais)
         except Exception as e:
             logger.warning(
                 "Sem informações adicionais ou erro para %s: %s",

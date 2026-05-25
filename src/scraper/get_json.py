@@ -6,26 +6,28 @@ from src.core.logger import logger
 JSON_PREVIEW_LENGTH = 200
 
 
+def _parse_json_match(text: str):
+    """Extrai e valida o primeiro objeto JSON encontrado no texto."""
+    match = re.search(r"(\{.*})", text, re.DOTALL)
+    if not match:
+        logger.debug(
+            "extract_valid_json: nenhum JSON válido encontrado no texto de entrada"
+        )
+        return None
+    parsed = json.loads(match.group(1))
+    logger.debug(
+        "extract_valid_json: sucesso ao parsear JSON com %s chaves",
+        len(parsed) if isinstance(parsed, dict) else 0,
+    )
+    return parsed
+
+
 def extract_valid_json(text):
     """
     Remove textos extras antes ou depois do JSON e limpa blocos markdown.
     """
     try:
-        # Encontra o primeiro '{' e o último '}'
-        match = re.search(r"(\{.*})", text, re.DOTALL)
-        if match:
-            json_clean = match.group(1)
-            # Valida se é um JSON estruturalmente correto
-            parsed = json.loads(json_clean)
-            logger.debug(
-                "extract_valid_json: sucesso ao parsear JSON com %s chaves",
-                len(parsed) if isinstance(parsed, dict) else 0,
-            )
-            return parsed
-        logger.debug(
-            "extract_valid_json: nenhum JSON válido encontrado no texto de entrada"
-        )
-        return None
+        return _parse_json_match(text)
     except (json.JSONDecodeError, AttributeError):
         snippet = (
             (text[:JSON_PREVIEW_LENGTH] + "...") if isinstance(text, str) else ""

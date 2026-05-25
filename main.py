@@ -46,26 +46,26 @@ def main() -> int:
     if args.mode in {"scraper", "all"}:
         logger.info("[main] Iniciando scraper...")
         code = run_module(SCRAPER_MODULE)
-        logger.info("[main] Scraper concluído com sucesso.")
         if code != 0:
             logger.error("[main] Erro no scraper: código de saída %s", code)
             return code
+        logger.info("[main] Scraper concluído com sucesso.")
 
     if args.mode in {"get-job", "all"}:
         logger.info("[main] Iniciando get_job...")
         code = run_module(GET_JOB_MODULE)
-        logger.info("[main] Get_job concluído com sucesso.")
         if code != 0:
             logger.error("[main] Erro no get_job: código de saída %s", code)
             return code
+        logger.info("[main] Get_job concluído com sucesso.")
 
     if args.mode in {"email", "all"}:
         logger.info("[main] Iniciando envio de e-mails...")
         code = run_module(EMAIL_MODULE)
-        logger.info("[main] Email concluído com sucesso.")
         if code != 0:
             logger.error("[main] Erro no envio de e-mails: código de saída %s", code)
             return code
+        logger.info("[main] Email concluído com sucesso.")
 
     logger.info("[main] Execução concluída com sucesso.")
     return 0

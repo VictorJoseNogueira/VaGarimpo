@@ -1,6 +1,12 @@
 # ==========================================
 # .gitignore otimizado para Python + Playwright + Groq + Docker
 # ==========================================
+# Adicionado arquivo de contexto.md
+contexto.md
+contexto2.md
+RELATORIO_AUDITORIA.md
+ROADMAP_TESTES.md
+
 
 # --- Segurança e Credenciais (Crítico) ---
 .env
