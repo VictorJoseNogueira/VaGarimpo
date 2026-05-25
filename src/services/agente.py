@@ -6,58 +6,66 @@ from groq import Groq
 
 from src.core.logger import logger
 
-# ruff: noqa: E501
-
-AGENT_TEMPERATURE = 0.5
-AGENT_MAX_TOKENS = 2048
-JSON_DUMP_INDENT = 4
-
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY")
+# Configurações
+AGENT_TEMPERATURE = 0.0
+AGENT_MAX_TOKENS = 2048
+# Lista de modelos reais suportados pela Groq
+MODELS = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+]
 
-model_llama_3_3_70b_versatile = "llama-3.3-70b-versatile"
-model_llama_3_1_8b_instant = "llama-3.1-8b-instant"
 
-with open("src/assets/prompts/agent_prompt.txt", "r", encoding="utf-8") as file:
-    agent_prompt = file.read()
+class AgentManager:
+    def __init__(self, system_prompt: str):
+        self.api_key = os.getenv("GROQ_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("GROQ_API_KEY não definida.")
 
+        self.client = Groq(api_key=self.api_key)
+        self.system_prompt = system_prompt
+        self.model_index = 0
 
-def run_agent(user_input: dict | str) -> str:
-    if not API_KEY:
-        logger.error("API_KEY não definida. Aborting run_agent.")
-        raise RuntimeError("API_KEY não está definida")
+    @property
+    def current_model(self):
+        return MODELS[self.model_index]
 
-    if isinstance(user_input, dict):
-        user_input_str = json.dumps(
-            user_input,
-            ensure_ascii=False,
-            indent=JSON_DUMP_INDENT,
+    def _rotate_model(self):
+        self.model_index = (self.model_index + 1) % len(MODELS)
+        logger.warning(f"Alternando para o modelo: {self.current_model}")
+
+    def execute(self, user_input: dict | str, max_retries: int = 4) -> str:
+        content = (
+            json.dumps(user_input, ensure_ascii=False)
+            if isinstance(user_input, dict)
+            else str(user_input)
         )
-    else:
-        user_input_str = str(user_input)
 
-    logger.info("Iniciando chamada ao agente")
-    logger.debug("run_agent: tamanho do input=%s", len(user_input_str))
-    custom_agent = agent_prompt
-    client = Groq(
-        api_key=API_KEY,
-    )
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": content},
+                    ],
+                    model=self.current_model,
+                    temperature=AGENT_TEMPERATURE,
+                    max_tokens=AGENT_MAX_TOKENS,
+                )
+                return response.choices[0].message.content
 
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": custom_agent,
-                },
-                {"role": "user", "content": user_input_str},
-            ],
-            temperature=AGENT_TEMPERATURE,
-            max_tokens=AGENT_MAX_TOKENS,
-            model=model_llama_3_1_8b_instant,
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        logger.error("Erro na chamada ao Groq: %s", e)
-        raise
+            except Exception as e:
+                # Passando tudo como uma única string para o logger
+                logger.error(
+                    f"Erro {self.current_model} (Tentativa {attempt + 1}): {e}"
+                )
+                if attempt < max_retries - 1:
+                    self._rotate_model()
+                else:
+                    raise RuntimeError(
+                        "Falha crítica: Todos os modelos e tentativas esgotaram."
+                    ) from e

@@ -1,18 +1,32 @@
+from datetime import datetime
+
 from mongoengine import (
+    BooleanField,
+    DateTimeField,
     Document,
-    EmbeddedDocument,
+    DynamicEmbeddedDocument,
     EmbeddedDocumentField,
     FloatField,
+    IntField,
     ListField,
     StringField,
     URLField,
-    DynamicEmbeddedDocument
 )
 
 
-class LlmResponse(EmbeddedDocument):
+class FirstMatch(DynamicEmbeddedDocument):
+    raciocinio_passo_a_passo = StringField()
+    score = IntField()
+
+
+class LlmResponse(DynamicEmbeddedDocument):
+    first_match = EmbeddedDocumentField(FirstMatch)
     status = StringField()
     match_percentage = FloatField()
+    strengths = ListField(StringField())
+    weaknesses = ListField(StringField())
+    payments = StringField()
+    proposta = StringField()
     motivation = StringField()
 
 
@@ -39,6 +53,8 @@ class JobData(Document):
     details = EmbeddedDocumentField(JobDetails)
     llm_response = EmbeddedDocumentField(LlmResponse)
     userName = StringField()
+    scrapp_at = DateTimeField(default=datetime.utcnow)
+    enviado_email = BooleanField(default=False)
 
     # Substitui a class Settings do Beanie pelo dicionário meta do MongoEngine
     meta = {"collection": "jobs_collection"}

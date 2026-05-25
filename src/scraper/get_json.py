@@ -22,7 +22,9 @@ def extract_valid_json(text):
                 len(parsed) if isinstance(parsed, dict) else 0,
             )
             return parsed
-        logger.debug("extract_valid_json: nenhum JSON válido encontrado no texto de entrada")
+        logger.debug(
+            "extract_valid_json: nenhum JSON válido encontrado no texto de entrada"
+        )
         return None
     except (json.JSONDecodeError, AttributeError):
         snippet = (

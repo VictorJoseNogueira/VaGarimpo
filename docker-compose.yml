@@ -7,7 +7,7 @@ services:
       - ./:/app
     env_file:
       - .env
-    command: python main.py --mode all
+    command: python main.py --mode ${MODE:-all}
     depends_on:
       - mongo-db
     restart: on-failure

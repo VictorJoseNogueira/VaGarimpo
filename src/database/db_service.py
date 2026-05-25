@@ -34,7 +34,15 @@ def read_all_jobs() -> list[object]:
     return list(JobData.objects())
 
 
-def update_a_job(url: str, data: dict) -> None:
+def update_a_job(job_id: str, data: dict) -> None:
+    if not data:
+        return
+    update_count = JobData.objects(id=job_id).update_one(**data)
+    if update_count == 0:
+        raise ValueError(f"Job com ID '{job_id}' não encontrado.")
+
+
+def update_a_job_url(url: str, data: dict) -> None:
     job = JobData.objects(link=url).first()
     if not job:
         raise ValueError(f"Job com url '{url}' não encontrado.")
@@ -49,3 +57,10 @@ def delete_a_job(url: str):
         job.delete()
     else:
         raise ValueError(f"Job com url '{url}' não encontrado.")
+
+
+def mark_jobs_email_sent(job_ids: list[str]) -> int:
+    """Marca vagas como enviadas por e-mail para evitar reenvio."""
+    if not job_ids:
+        return 0
+    return JobData.objects(id__in=job_ids).update(set__enviado_email=True)

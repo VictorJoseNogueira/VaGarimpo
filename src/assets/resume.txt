@@ -1,0 +1,48 @@
+VICTOR JOSÉ NOGUEIRA SANTOS
+
+victorvalim1@gmail.com | Mauá, SP
+
+R E S U M O P R O F I S S I O N A L
+Desenvolvedor Backend Jr com experiência em automação de processos, desenvolvimento de sistemas completos
+do front-end ao banco de dados e suporte a troubleshooting em rotinas técnicas. Atuo com Python, APIs REST,
+integrações entre sistemas, análise de dados e boas práticas de desenvolvimento, com foco em entregar soluções
+que aumentam a produtividade e atendem às necessidades do usuário final.
+E X P E R I Ê N C I A P R O F I S S I O N A L
+Medcof Educação S. A. 12/2024 — 03/2025
+Analista de Automação
+• Desenvolvi um sistema completo de assistente de pagamentos, abrangendo front-end, back-end e banco de
+dados, com processamento de cerca de R$ 40 mil por ciclo.
+
+• Implementei scripts para automatizar processos internos, reduzindo o tempo operacional da equipe e aumen-
+tando a produtividade em 80%.
+
+• Eliminei aproximadamente 300 horas de trabalho manual por ciclo de pagamento (cerca de 100 horas/mês) ao
+automatizar a auditoria de aulas e o cálculo de contratos.
+• Executei tratamento de dados, removendo apelidos e padronizando nomes completos de professores, reduzindo
+erros de busca e acelerando consultas em 40% em planilhas com mais de 1.000 linhas.
+Centro de Proteção Animal (CPA) de Mauá 03/2023 - 04/2023
+Desenvolvedor de Sistema de Gestão (Projeto Acadêmico)
+• Desenvolvi um sistema integrado de gestão para centralizar dados de pacientes, tutores e prontuários médicos
+de animais.
+• Atuei desde o levantamento de requisitos com profissionais do CPA até a implementação final, aplicando
+metodologias ágeis.
+• Apliquei o ciclo Ouvir-Criar-Implementar baseado em feedback real dos usuários para garantir a eficácia da
+solução.
+F O R M A Ç Ã O A C A D Ê M I C A
+UNIVESP 12/2027 (Previsão)
+Bacharelado em Ciência de Dados
+UNIVESP Concluído – 06/2025
+Bacharelado em Tecnologia da Informação
+H A B I L I D A D E S T É C N I C A S
+Python, JavaScript, Java, SQL, HTML, CSS, Bootstrap, Pandas, Numpy, Node.js, Django, Flask, FastAPI, Express,
+React, Vue.js, MySQL, PostgreSQL, Docker, Git, GitHub, Excel, Power BI, Figma, Programação Orientada a Objetos
+(POO), Design Thinking, REST API, ETL, Web Scraping, Análise Exploratória de Dados, Metodologias Ágeis
+(Scrum), Variáveis de ambiente (.env)
+I D I O M A S
+• Inglês: Avançado (C1)
+C E R T I F I C A Ç Õ E S
+• Artificial Intelligence Fundamentals - IBM
+• Prompt Engineering Foundation Learner 2025 - Certiprof
+• Certificação Excel Processo Seletivo da Hashtag Treinamentos - Hashtag Treinamentos
+• EF SET English Certificate 61/100 (C1 Advanced) - EF SET
+• AWS Educate Introduction to Cloud 101 - Training Badge - Amazon Web Services (AWS)

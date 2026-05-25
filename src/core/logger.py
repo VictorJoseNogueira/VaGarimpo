@@ -12,11 +12,11 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 class ColoredFormatter(logging.Formatter):
     COLORS = {
-        "DEBUG": "\033[94m",      # Azul
-        "INFO": "\033[92m",       # Verde
-        "WARNING": "\033[93m",    # Amarelo
-        "ERROR": "\033[91m",      # Vermelho
-        "CRITICAL": "\033[95m",   # Magenta
+        "DEBUG": "\033[94m",  # Azul
+        "INFO": "\033[92m",  # Verde
+        "WARNING": "\033[93m",  # Amarelo
+        "ERROR": "\033[91m",  # Vermelho
+        "CRITICAL": "\033[95m",  # Magenta
     }
 
     RESET = "\033[0m"
@@ -24,9 +24,10 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         color = self.COLORS.get(record.levelname, self.RESET)
 
+        # Inserido %(filename)s no formato
         log_format = (
             f"{color}"
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            "%(asctime)s - %(name)s - %(filename)s - %(levelname)s - %(message)s"
             f"{self.RESET}"
         )
 
@@ -54,20 +55,23 @@ if not logger.handlers:
         fh = logging.FileHandler(LOG_PATH)
         fh.setLevel(level)
 
+        # Inserido %(filename)s no formato do arquivo também
         file_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            "%(asctime)s - %(name)s - %(filename)s - %(levelname)s - %(message)s"
         )
 
         fh.setFormatter(file_formatter)
 
         logger.addHandler(fh)
 
-    except Exception:
-        pass
+    except Exception as e:
+        # Tratamento explícito para não suprimir falhas de I/O silenciosamente
+        print(f"Falha ao inicializar o FileHandler: {e}", file=sys.stderr)
 
 
-logger.debug("Debug")
-logger.info("Info")
-logger.warning("Warning")
-logger.error("Error")
-logger.critical("Critical")
+if __name__ == "__main__":
+    logger.debug("Debug")
+    logger.info("Info")
+    logger.warning("Warning")
+    logger.error("Not a valid JSON response")
+    logger.critical("Critical")
