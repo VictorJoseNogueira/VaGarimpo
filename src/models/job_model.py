@@ -1,7 +1,6 @@
 from mongoengine import (
     Document,
     DynamicEmbeddedDocument,
-    EmbeddedDocument,
     EmbeddedDocumentField,
     FloatField,
     ListField,
@@ -10,10 +9,13 @@ from mongoengine import (
 )
 
 
-from mongoengine import DynamicEmbeddedDocument, StringField, FloatField, ListField
+class FirstMatch(DynamicEmbeddedDocument):
+    raciocinio_passo_a_passo = StringField()
+    score = StringField()
+
 
 class LlmResponse(DynamicEmbeddedDocument):
-    first_match=StringField()
+    first_match = EmbeddedDocumentField(FirstMatch)
     status = StringField()
     match_percentage = FloatField()
     strengths = ListField(StringField())
@@ -21,6 +23,7 @@ class LlmResponse(DynamicEmbeddedDocument):
     payments = StringField()
     proposta = StringField()
     motivation = StringField()
+
 
 # Modelos auxiliares para os objetos aninhados
 class JobDetails(DynamicEmbeddedDocument):

@@ -10,11 +10,7 @@ REGRA DE SAÍDA:
 Retorne APENAS um objeto JSON válido, sem formatação markdown (```json), sem explicações fora das chaves. O JSON deve ter a exata estrutura abaixo:
 
 {
-  "analise_inconsistencias": "Aponte se há erros do RH na vaga (ex: estágio pedindo superior completo) ou red flags.",
-  "mapeamento_requisitos": [
-    {"requisito": "Nome do requisito", "atendido": true/false, "evidencia_no_cv": "Qual skill ou experiência prova isso (ou justifique a falta)"}
-  ],
-  "raciocinio_final": "Resumo de 3 linhas justificando o score com base no mapeamento acima.",
+  "raciocinio_passo_a_passo": "<Avalie os 4 pontos das regras aqui, de forma concisa>",
   "score": <numero inteiro de 0 a 100>
 }
 

@@ -219,7 +219,7 @@ class scrapper99Freela:
             else:
                 info["descricao"] = description_text.strip()
         except Exception as e:
-            logger.warning("Erro ao coletar descrição para %s: %s", title, e)
+            logger.error("Erro ao coletar descrição para %s: %s", title, e)
             info["descricao"] = "Descrição não disponível"
 
     def _extract_details(self, page, doc: dict, title: str) -> dict:
@@ -236,7 +236,7 @@ class scrapper99Freela:
                 chave = row.locator("th").inner_text().strip(" :").lower()
                 valor = row.locator("td").inner_text().strip().lower()
                 info_adicionais[chave] = valor
-                logger.debug(f"chave: {chave} - valor: {valor}")
+                logger.debug(f"{chave} - {valor}")
             doc["details"] = info_adicionais
             clean_data = self._format_brute_data(doc=info_adicionais)
             return clean_data
@@ -277,7 +277,7 @@ class scrapper99Freela:
 
             return element_text.strip()
         except Exception as e:
-            logger.warning("Erro ao coletar elemento %s: %s", element, e)
+            logger.error("Erro ao coletar elemento %s: %s", element, e)
             return "Elemento não disponível"
 
     @staticmethod
@@ -293,7 +293,7 @@ class scrapper99Freela:
             # Remove espaços em branco e padroniza para minúsculas
             return [text.strip().lower() for text in elements_text if text.strip()]
         except Exception as e:
-            logger.warning("Erro ao coletar lista de elementos %s: %s", element, e)
+            logger.error("Erro ao coletar lista de elementos %s: %s", element, e)
             return []
 
     def scrap_page_get_data(self):
@@ -353,7 +353,7 @@ def main():
 
     json_path = os.getenv("JSON_PATH", "src/data/projects.json")
     scrapper99Freela(
-        link=freela, json_path=json_path, max_pages=10
+        link=freela, json_path=json_path, max_pages=4
     ).scrap_page_get_links().scrap_page_get_data().save_mongodb()
     db_disconnect()
 
