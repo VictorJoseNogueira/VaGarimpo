@@ -51,7 +51,7 @@ def select_jobs_for_email() -> JobSelectionResult:
         if len(pool) <= MAX_JOBS_TO_SEND:
             selected = pool[:MAX_JOBS_TO_SEND]
             logger.info(
-                "[job_selection] Selecionadas %s vaga(s) (min_score=%s, overflow=False).",
+                "[job_selection] Selecionadas %s vaga(s) (min_score=%s, overflow=False).",  # noqa: E501
                 len(selected),
                 min_score,
             )

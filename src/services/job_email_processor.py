@@ -12,7 +12,8 @@ from src.services.job_selection import (
 
 
 class JobEmailProcessor:
-    def run(self) -> JobSelectionResult:
+    @staticmethod
+    def run() -> JobSelectionResult:
         logger.info("[job_email] Iniciando pipeline de envio de e-mails.")
         result = select_jobs_for_email()
         logger.debug(
@@ -38,7 +39,7 @@ class JobEmailProcessor:
 
         if not result.jobs:
             logger.info(
-                "[job_email] Nenhuma vaga elegível (score >= %s, enviado_email=False).",
+                "[job_email] Nenhuma vaga elegível (score >= %s, enviado_email=False).",  # noqa: E501
                 MIN_SCORE,
             )
             return result
@@ -133,4 +134,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
