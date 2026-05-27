@@ -7,7 +7,7 @@ LOG_PATH = os.getenv(
     os.path.join(os.path.dirname(__file__), "..", "scraper.log"),
 )
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG").upper()
 
 
 class ColoredFormatter(logging.Formatter):
@@ -39,7 +39,7 @@ class ColoredFormatter(logging.Formatter):
 logger = logging.getLogger("scrapper")
 
 if not logger.handlers:
-    level = getattr(logging, LOG_LEVEL, logging.INFO)
+    level = getattr(logging, LOG_LEVEL, logging.DEBUG)
 
     logger.setLevel(level)
     logger.propagate = False

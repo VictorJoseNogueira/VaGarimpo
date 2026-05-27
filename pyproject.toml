@@ -30,7 +30,7 @@ check = "task fix && task lint"
 
 # Gerenciamento de Dependências
 install = "pip install -r requirements.txt"
-freeze = "pipreqs . --force"
+freeze = "pip freeze > requirements.txt"
 
 # Execução e Contêineres (Docker)
 run = "docker compose up --build"
